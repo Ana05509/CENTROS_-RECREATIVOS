@@ -1,0 +1,91 @@
+{% extends "base_cuenta.html" %}
+
+{% block titulo %}Mis sugerencias — Mapa Recreativo de La Maná{% endblock %}
+{% block encabezado_titulo %}📋 Mis sugerencias{% endblock %}
+
+{% block estilos_extra %}
+        .seccion h2 {
+            font-size: 0.95rem;
+            color: var(--verde-oscuro);
+            margin: 18px 0 10px;
+        }
+        .seccion:first-child h2 { margin-top: 0; }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--borde);
+        }
+        .item:last-child { border-bottom: none; }
+        .item .nombre {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .item .detalle {
+            font-size: 0.78rem;
+            color: #5c6e64;
+        }
+        .badge {
+            flex-shrink: 0;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .badge.aprobado {
+            background: #eaf6ee;
+            color: var(--verde-oscuro);
+        }
+        .badge.pendiente {
+            background: #fdf3e0;
+            color: #a86a10;
+        }
+        .vacio {
+            font-size: 0.85rem;
+            color: #5c6e64;
+        }
+{% endblock %}
+
+{% block contenido %}
+            <div class="seccion">
+                <h2>📍 Lugares ({{ lugares|length }})</h2>
+                {% for lugar in lugares %}
+                    <div class="item">
+                        <div>
+                            <div class="nombre">{{ lugar.nombre }}</div>
+                            <div class="detalle">{{ lugar.categoria }} · {{ lugar.fecha_creacion|date:"d/m/Y" }}</div>
+                        </div>
+                        {% if lugar.aprobado %}
+                            <span class="badge aprobado">Aprobado</span>
+                        {% else %}
+                            <span class="badge pendiente">Pendiente</span>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="vacio">Todavía no has sugerido ningún lugar.</p>
+                {% endfor %}
+            </div>
+
+            <div class="seccion">
+                <h2>📅 Eventos ({{ eventos|length }})</h2>
+                {% for evento in eventos %}
+                    <div class="item">
+                        <div>
+                            <div class="nombre">{{ evento.nombre }}</div>
+                            <div class="detalle">{{ evento.lugar.nombre }} · {{ evento.fecha_inicio|date:"d/m/Y" }}</div>
+                        </div>
+                        {% if evento.aprobado %}
+                            <span class="badge aprobado">Aprobado</span>
+                        {% else %}
+                            <span class="badge pendiente">Pendiente</span>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <p class="vacio">Todavía no has sugerido ningún evento.</p>
+                {% endfor %}
+            </div>
+
+            <p class="aviso"><a href="{% url 'lugares:sugerir' %}">➕ Sugerir algo nuevo</a></p>
+{% endblock %}

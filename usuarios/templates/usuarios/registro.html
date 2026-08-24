@@ -1,0 +1,33 @@
+{% extends "base_cuenta.html" %}
+
+{% block titulo %}Crear cuenta — Mapa Recreativo de La Maná{% endblock %}
+{% block encabezado_titulo %}📝 Crear cuenta{% endblock %}
+
+{% block contenido %}
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="campo">
+                    <label for="{{ form.username.id_for_label }}">Usuario</label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                    {% if form.username.help_text %}<p class="ayuda">{{ form.username.help_text }}</p>{% endif %}
+                </div>
+                <div class="campo">
+                    <label for="{{ form.email.id_for_label }}">Correo (opcional)</label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+                    {{ form.password1 }}
+                    {{ form.password1.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
+                </div>
+                <button type="submit" class="btn-enviar">Crear cuenta</button>
+            </form>
+            <p class="aviso">¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión</a></p>
+{% endblock %}

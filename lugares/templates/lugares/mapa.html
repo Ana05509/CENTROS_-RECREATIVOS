@@ -55,7 +55,12 @@
             font-size: 0.8rem;
             opacity: 0.9;
         }
-        #link-sugerir {
+        .acciones-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        #link-sugerir, .link-cuenta {
             display: inline-block;
             font-size: 0.78rem;
             font-weight: 600;
@@ -64,9 +69,16 @@
             padding: 5px 10px;
             border-radius: 14px;
             text-decoration: none;
+            border: none;
+            font-family: inherit;
+            cursor: pointer;
         }
-        #link-sugerir:hover {
+        #link-sugerir:hover, .link-cuenta:hover {
             background: rgba(255,255,255,0.3);
+        }
+        .form-salir {
+            margin: 0;
+            display: inline-block;
         }
         #filtros {
             padding: 12px 16px;
@@ -257,7 +269,19 @@
             <header>
                 <h1>🌿 Mapa Recreativo de La Maná</h1>
                 <p>Centros recreativos, ríos, cascadas y balnearios</p>
-                <a id="link-sugerir" href="{% url 'lugares:sugerir' %}">➕ Sugerir un lugar o evento</a>
+                <div class="acciones-header">
+                    <a id="link-sugerir" href="{% url 'lugares:sugerir' %}">➕ Sugerir un lugar o evento</a>
+                    {% if user.is_authenticated %}
+                        <a class="link-cuenta" href="{% url 'usuarios:mis_sugerencias' %}">👤 {{ user.username }}</a>
+                        <form action="{% url 'usuarios:logout' %}" method="post" class="form-salir">
+                            {% csrf_token %}
+                            <button type="submit" class="link-cuenta">Salir</button>
+                        </form>
+                    {% else %}
+                        <a class="link-cuenta" href="{% url 'usuarios:login' %}">Iniciar sesión</a>
+                        <a class="link-cuenta" href="{% url 'usuarios:registro' %}">Registrarse</a>
+                    {% endif %}
+                </div>
             </header>
             <div id="filtros">
                 <label for="buscador">Buscar por nombre</label>

@@ -91,11 +91,14 @@ def sugerir(request):
 
         tipo_activo = request.POST.get("tipo", "lugar")
 
+        autor = request.user if request.user.is_authenticated else None
+
         if tipo_activo == "evento":
             evento_form = SugerenciaEventoForm(request.POST, request.FILES, prefix="evento")
             if evento_form.is_valid():
                 evento = evento_form.save(commit=False)
                 evento.aprobado = False
+                evento.creado_por = autor
                 evento.save()
                 messages.success(
                     request,
@@ -107,7 +110,7 @@ def sugerir(request):
             if lugar_form.is_valid():
                 lugar = lugar_form.save(commit=False)
                 lugar.aprobado = False
-                lugar.creado_por = None
+                lugar.creado_por = autor
                 lugar.save()
                 messages.success(
                     request,

@@ -23,7 +23,7 @@ class LugarAdmin(admin.ModelAdmin):
 
 @admin.register(Evento)
 class EventoAdmin(admin.ModelAdmin):
-    list_display = ("nombre", "lugar", "aprobado", "fecha_inicio", "fecha_fin")
+    list_display = ("nombre", "lugar", "aprobado", "creado_por", "fecha_inicio", "fecha_fin")
     list_filter = ("aprobado",)
     search_fields = ("nombre", "lugar__nombre")
     actions = [marcar_aprobado, marcar_no_aprobado]

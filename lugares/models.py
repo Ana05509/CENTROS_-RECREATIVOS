@@ -80,6 +80,13 @@ class Evento(models.Model):
         null=True
     )
 
+    creado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
     aprobado = models.BooleanField(
         default=True,
         help_text="Los eventos sugeridos por el público quedan sin aprobar "

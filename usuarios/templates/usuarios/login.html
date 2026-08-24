@@ -1,0 +1,26 @@
+{% extends "base_cuenta.html" %}
+
+{% block titulo %}Iniciar sesión — Mapa Recreativo de La Maná{% endblock %}
+{% block encabezado_titulo %}🔑 Iniciar sesión{% endblock %}
+
+{% block contenido %}
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="campo">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="campo">
+                    <label for="{{ form.username.id_for_label }}">Usuario</label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ form.password.id_for_label }}">Contraseña</label>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </div>
+                <input type="hidden" name="next" value="{{ next }}">
+                <button type="submit" class="btn-enviar">Iniciar sesión</button>
+            </form>
+            <p class="aviso">¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a></p>
+{% endblock %}
