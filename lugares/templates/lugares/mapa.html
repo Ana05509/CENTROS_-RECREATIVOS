@@ -8,6 +8,8 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
+          integrity="sha256-cu3EeyAbdh7FZ58X4+oQz2g30Tw/U+3Utqmr1ETODqQ=" crossorigin="" />
 
     <style>
         :root {
@@ -126,6 +128,7 @@
         #map {
             flex: 1;
             height: 100%;
+            position: relative;
         }
         .popup-lugar h3 {
             margin: 0 0 6px;
@@ -145,10 +148,93 @@
         .popup-lugar .etiqueta {
             font-weight: 600;
         }
+        .btn-como-llegar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 7px 12px;
+            border: none;
+            border-radius: 20px;
+            background: #4285F4;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-como-llegar:hover {
+            background: #3367d6;
+        }
+
+        /* --- Botón "Mi ubicación" estilo Google Maps --- */
+        .boton-ubicacion {
+            background: #fff;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+        .boton-ubicacion:hover {
+            background: #f2f2f2;
+        }
+
+        /* --- Barra de ruta activa --- */
+        #barra-ruta {
+            display: none;
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            padding: 8px 10px 8px 16px;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            max-width: 90%;
+        }
+        #barra-ruta strong {
+            color: var(--verde-oscuro);
+        }
+        #boton-cancelar-ruta {
+            border: none;
+            background: #eee;
+            color: #333;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1;
+        }
+        #boton-cancelar-ruta:hover {
+            background: #ddd;
+        }
+
+        /* --- Panel de indicaciones (Leaflet Routing Machine) --- */
+        .leaflet-routing-container {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+            padding: 10px;
+            max-height: 70vh;
+            font-family: inherit;
+        }
+        .leaflet-routing-alt h2, .leaflet-routing-alt h3 {
+            color: var(--verde-oscuro);
+        }
         @media (max-width: 720px) {
             .app { flex-direction: column; }
             #sidebar { width: 100%; height: 45%; }
             #map { height: 55%; }
+            .leaflet-routing-container { max-width: 260px; }
         }
     </style>
 </head>
@@ -179,11 +265,18 @@
             <div id="lista"></div>
             <div id="contador">{{ total_lugares }} lugares en total</div>
         </aside>
-        <div id="map"></div>
+        <div id="map">
+            <div id="barra-ruta">
+                <span>🧭 Ruta hacia <strong id="destino-actual"></strong></span>
+                <button id="boton-cancelar-ruta" title="Cancelar ruta">✕</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"
+            integrity="sha256-W+ggQ0MIhtG5LaUrBTtRqUFHT0m9MnTVJqej3K2Pz2A=" crossorigin=""></script>
     <script>
         const LUGARES = {{ lugares_json|safe }};
         const PUNTOS = {{ puntos_json|safe }};
@@ -224,6 +317,120 @@
         const categoriaEl = document.getElementById('categoria-select');
         const contadorEl = document.getElementById('contador');
 
+        // ==============================
+        // 📍 Ubicación en vivo (tipo GPS)
+        // ==============================
+        let miUbicacion = null;
+        let marcadorUbicacion = null;
+        let circuloPrecision = null;
+        let watchId = null;
+
+        const iconoUbicacion = L.divIcon({
+            className: '',
+            html: '<div style="width:16px;height:16px;border-radius:50%;background:#4285F4;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.5);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+        });
+
+        function actualizarUbicacion(lat, lng, precision) {
+            miUbicacion = [lat, lng];
+            if (!marcadorUbicacion) {
+                marcadorUbicacion = L.marker(miUbicacion, { icon: iconoUbicacion, zIndexOffset: 1000 })
+                    .bindPopup('📍 Estás aquí')
+                    .addTo(map);
+                circuloPrecision = L.circle(miUbicacion, {
+                    radius: precision, color: '#4285F4', weight: 1, fillOpacity: 0.12,
+                }).addTo(map);
+            } else {
+                marcadorUbicacion.setLatLng(miUbicacion);
+                circuloPrecision.setLatLng(miUbicacion);
+                circuloPrecision.setRadius(precision);
+            }
+        }
+
+        function activarMiUbicacion(centrar) {
+            if (!navigator.geolocation) {
+                alert('Tu navegador no soporta geolocalización.');
+                return;
+            }
+            if (watchId === null) {
+                watchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+                        if (centrar) { map.setView(miUbicacion, 15); }
+                    },
+                    (err) => alert('No se pudo obtener tu ubicación: ' + err.message),
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+                );
+            } else if (miUbicacion) {
+                map.setView(miUbicacion, 15);
+            }
+        }
+
+        const controlUbicacion = L.control({ position: 'bottomright' });
+        controlUbicacion.onAdd = function () {
+            const div = L.DomUtil.create('div', 'leaflet-bar boton-ubicacion');
+            div.innerHTML = '📍';
+            div.title = 'Mi ubicación';
+            L.DomEvent.disableClickPropagation(div);
+            L.DomEvent.on(div, 'click', () => activarMiUbicacion(true));
+            return div;
+        };
+        controlUbicacion.addTo(map);
+
+        // ==============================
+        // 🧭 Cómo llegar (ruta real por calles, vía OSRM)
+        // ==============================
+        let controlRuta = null;
+        const barraRuta = document.getElementById('barra-ruta');
+        const destinoActualEl = document.getElementById('destino-actual');
+
+        function crearRuta(destino, nombreDestino) {
+            if (controlRuta) { map.removeControl(controlRuta); }
+            controlRuta = L.Routing.control({
+                waypoints: [L.latLng(miUbicacion[0], miUbicacion[1]), L.latLng(destino[0], destino[1])],
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1',
+                    language: 'es',
+                    profile: 'driving',
+                }),
+                routeWhileDragging: false,
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                lineOptions: { styles: [{ color: '#4285F4', weight: 6, opacity: 0.85 }] },
+                createMarker: (i, wp) => (i === 0 ? null : L.marker(wp.latLng)),
+            }).addTo(map);
+
+            destinoActualEl.textContent = nombreDestino;
+            barraRuta.style.display = 'flex';
+        }
+
+        function iniciarRutaHacia(destino, nombreDestino) {
+            if (miUbicacion) {
+                crearRuta(destino, nombreDestino);
+                return;
+            }
+            if (!navigator.geolocation) {
+                alert('Tu navegador no soporta geolocalización, no se puede calcular la ruta.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+                    crearRuta(destino, nombreDestino);
+                    if (watchId === null) { activarMiUbicacion(false); }
+                },
+                () => alert('Activa el permiso de ubicación para calcular la ruta.'),
+                { enableHighAccuracy: true, timeout: 15000 }
+            );
+        }
+
+        document.getElementById('boton-cancelar-ruta').addEventListener('click', () => {
+            if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; }
+            barraRuta.style.display = 'none';
+        });
+
         function popupHTML(lugar) {
             const imagen = lugar.imagen ? `<img src="${lugar.imagen}" alt="${lugar.nombre}">` : '';
             const costo = parseFloat(lugar.costo_entrada) > 0
@@ -238,6 +445,7 @@
                     <p><span class="etiqueta">Dirección:</span> ${lugar.direccion}</p>
                     ${lugar.horario ? `<p><span class="etiqueta">Horario:</span> ${lugar.horario}</p>` : ''}
                     <p><span class="etiqueta">Entrada:</span> ${costo}</p>
+                    <button class="btn-como-llegar" data-lat="${lugar.lat}" data-lng="${lugar.lng}" data-nombre="${lugar.nombre.replace(/"/g, '&quot;')}">🧭 Cómo llegar</button>
                 </div>
             `;
         }
@@ -341,6 +549,15 @@
         });
         document.getElementById('capa-rutas').addEventListener('change', (e) => {
             if (e.target.checked) { map.addLayer(capaRutas); } else { map.removeLayer(capaRutas); }
+        });
+
+        // Delegado: los botones "Cómo llegar" viven dentro de popups que Leaflet
+        // crea/destruye dinámicamente, así que se escuchan desde document.
+        document.addEventListener('click', (e) => {
+            const boton = e.target.closest('.btn-como-llegar');
+            if (!boton) return;
+            const destino = [parseFloat(boton.dataset.lat), parseFloat(boton.dataset.lng)];
+            iniciarRutaHacia(destino, boton.dataset.nombre);
         });
     </script>
 </body>
