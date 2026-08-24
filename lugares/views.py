@@ -8,10 +8,22 @@ from mapas.models import PuntoInteres
 from rutas.models import Ruta
 
 from .forms import SugerenciaEventoForm, SugerenciaLugarForm
-from .models import Lugar
+from .models import Categoria, Lugar
 
 # Centro aproximado del cantón La Maná, usado cuando no hay lugares que centrar.
 CENTRO_LA_MANA = {"lat": -0.9431, "lng": -79.2312}
+
+
+def inicio(request):
+    """Portal público: presentación del proyecto, accesos a mapa, cuenta
+    y sugerencias, más un resumen de lo que hay cargado hasta ahora."""
+    stats = {
+        "lugares": Lugar.objects.filter(aprobado=True).count(),
+        "categorias": Categoria.objects.count(),
+        "puntos": PuntoInteres.objects.count(),
+        "rutas": Ruta.objects.count(),
+    }
+    return render(request, "lugares/inicio.html", {"stats": stats})
 
 
 def mapa(request):

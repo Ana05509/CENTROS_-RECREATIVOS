@@ -270,6 +270,7 @@
                 <h1>🌿 Mapa Recreativo de La Maná</h1>
                 <p>Centros recreativos, ríos, cascadas y balnearios</p>
                 <div class="acciones-header">
+                    <a class="link-cuenta" href="{% url 'lugares:inicio' %}">🏠 Inicio</a>
                     <a id="link-sugerir" href="{% url 'lugares:sugerir' %}">➕ Sugerir un lugar o evento</a>
                     {% if user.is_authenticated %}
                         <a class="link-cuenta" href="{% url 'usuarios:mis_sugerencias' %}">👤 {{ user.username }}</a>

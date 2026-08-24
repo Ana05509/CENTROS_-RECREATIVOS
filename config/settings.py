@@ -124,5 +124,5 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Autenticación
 LOGIN_URL = 'usuarios:login'
-LOGIN_REDIRECT_URL = 'lugares:mapa'
-LOGOUT_REDIRECT_URL = 'lugares:mapa'
+LOGIN_REDIRECT_URL = 'lugares:inicio'
+LOGOUT_REDIRECT_URL = 'lugares:inicio'

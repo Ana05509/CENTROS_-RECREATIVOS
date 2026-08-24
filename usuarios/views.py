@@ -9,14 +9,14 @@ from .forms import RegistroForm
 
 def registro(request):
     if request.user.is_authenticated:
-        return redirect("lugares:mapa")
+        return redirect("lugares:inicio")
 
     if request.method == "POST":
         form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("lugares:mapa")
+            return redirect("lugares:inicio")
     else:
         form = RegistroForm()
 

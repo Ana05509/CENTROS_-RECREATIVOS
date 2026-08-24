@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Recreativo de La Maná</title>
+    <style>
+        :root {
+            --verde-oscuro: #1f6e43;
+            --verde: #2e8b57;
+            --verde-claro: #eaf6ee;
+            --texto: #1a2b22;
+            --borde: #d5e6da;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--texto);
+            background: var(--verde-claro);
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: #fff;
+            border-bottom: 1px solid var(--borde);
+        }
+        nav .marca {
+            font-weight: 700;
+            color: var(--verde-oscuro);
+            font-size: 1.05rem;
+        }
+        nav .acciones {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        nav a, nav button {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px;
+            border-radius: 18px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-linea {
+            color: var(--verde-oscuro);
+            background: transparent;
+            border: 1px solid var(--verde-oscuro) !important;
+        }
+        .btn-lleno {
+            color: #fff;
+            background: var(--verde-oscuro);
+        }
+        .btn-lleno:hover, .btn-linea:hover {
+            opacity: 0.85;
+        }
+        .form-salir-nav {
+            margin: 0;
+            display: inline-block;
+        }
+        .hero {
+            text-align: center;
+            padding: 64px 20px 48px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .hero .emoji {
+            font-size: 2.6rem;
+        }
+        .hero h1 {
+            font-size: 2rem;
+            color: var(--verde-oscuro);
+            margin: 8px 0 12px;
+        }
+        .hero p {
+            font-size: 1.02rem;
+            color: #43574c;
+            line-height: 1.5;
+            margin: 0 0 28px;
+        }
+        .hero .cta {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .cta a {
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 12px 24px;
+            border-radius: 24px;
+        }
+        .cta .principal {
+            background: var(--verde-oscuro);
+            color: #fff;
+        }
+        .cta .secundario {
+            background: #fff;
+            color: var(--verde-oscuro);
+            border: 1px solid var(--verde-oscuro);
+        }
+        .cta a:hover { opacity: 0.88; }
+        .stats {
+            max-width: 720px;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        .stat {
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            padding: 18px 10px;
+            text-align: center;
+        }
+        .stat .numero {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--verde-oscuro);
+        }
+        .stat .etiqueta {
+            font-size: 0.75rem;
+            color: #5c6e64;
+            margin-top: 2px;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.78rem;
+            color: #5c6e64;
+        }
+        @media (max-width: 560px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .hero h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <span class="marca">🌿 Mapa Recreativo de La Maná</span>
+        <div class="acciones">
+            {% if user.is_authenticated %}
+                <a class="btn-linea" href="{% url 'usuarios:mis_sugerencias' %}">👤 {{ user.username }}</a>
+                <form action="{% url 'usuarios:logout' %}" method="post" class="form-salir-nav">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-linea">Salir</button>
+                </form>
+            {% else %}
+                <a class="btn-linea" href="{% url 'usuarios:login' %}">Iniciar sesión</a>
+                <a class="btn-lleno" href="{% url 'usuarios:registro' %}">Registrarse</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="emoji">🌳🏞️💧</div>
+        <h1>Descubre los centros recreativos del Cantón La Maná</h1>
+        <p>
+            Un mapa web interactivo con centros recreativos, ríos, cascadas, balnearios,
+            recursos naturales, infraestructura y rutas de acceso — hecho por y para la comunidad.
+        </p>
+        <div class="cta">
+            <a class="principal" href="{% url 'lugares:mapa' %}">🗺️ Ver el mapa interactivo</a>
+            <a class="secundario" href="{% url 'lugares:sugerir' %}">➕ Sugerir un lugar o evento</a>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stat">
+            <div class="numero">{{ stats.lugares }}</div>
+            <div class="etiqueta">Lugares recreativos</div>
+        </div>
+        <div class="stat">
+            <div class="numero">{{ stats.categorias }}</div>
+            <div class="etiqueta">Categorías</div>
+        </div>
+        <div class="stat">
+            <div class="numero">{{ stats.puntos }}</div>
+            <div class="etiqueta">Recursos e infraestructura</div>
+        </div>
+        <div class="stat">
+            <div class="numero">{{ stats.rutas }}</div>
+            <div class="etiqueta">Rutas de acceso</div>
+        </div>
+    </section>
+
+    <footer>
+        Cantón La Maná · Proyecto de mapa web interactivo con herramientas geoespaciales
+    </footer>
+</body>
+</html>
