@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Categoria, Evento, Lugar
+from .models import Categoria, Evento, Lugar, Multimedia
 
 
 @admin.action(description="Marcar seleccionados como aprobados")
@@ -26,6 +26,14 @@ class EventoAdmin(admin.ModelAdmin):
     list_display = ("nombre", "lugar", "aprobado", "creado_por", "fecha_inicio", "fecha_fin")
     list_filter = ("aprobado",)
     search_fields = ("nombre", "lugar__nombre")
+    actions = [marcar_aprobado, marcar_no_aprobado]
+
+
+@admin.register(Multimedia)
+class MultimediaAdmin(admin.ModelAdmin):
+    list_display = ("lugar", "tipo", "aprobado", "creado_por", "fecha_creacion")
+    list_filter = ("aprobado", "tipo")
+    search_fields = ("lugar__nombre", "descripcion")
     actions = [marcar_aprobado, marcar_no_aprobado]
 
 

@@ -2,13 +2,14 @@ import json
 
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from mapas.models import PuntoInteres
 from rutas.models import Ruta
 
-from .forms import SugerenciaEventoForm, SugerenciaLugarForm
-from .models import Categoria, Lugar
+from .forms import SugerenciaEventoForm, SugerenciaLugarForm, SugerenciaMultimediaForm
+from .models import Categoria, Lugar, TipoMultimedia
 
 # Centro aproximado del cantón La Maná, usado cuando no hay lugares que centrar.
 CENTRO_LA_MANA = {"lat": -0.9431, "lng": -79.2312}
@@ -43,6 +44,8 @@ def mapa(request):
             "costo_entrada": str(lugar.costo_entrada),
             "categoria": lugar.categoria.nombre,
             "imagen": lugar.imagen.url if lugar.imagen else None,
+            "detalle_url": reverse("lugares:detalle", args=[lugar.id]),
+            "multimedia_count": lugar.multimedia.filter(aprobado=True).count(),
         }
         for lugar in lugares
     ]
@@ -88,13 +91,28 @@ def mapa(request):
     return render(request, "lugares/mapa.html", context)
 
 
+def detalle_lugar(request, lugar_id):
+    """Ficha de un lugar con su galería de fotos y videos aprobados."""
+    lugar = get_object_or_404(Lugar, pk=lugar_id, aprobado=True)
+    fotos = lugar.multimedia.filter(aprobado=True, tipo=TipoMultimedia.FOTO)
+    videos = lugar.multimedia.filter(aprobado=True, tipo=TipoMultimedia.VIDEO)
+    context = {"lugar": lugar, "fotos": fotos, "videos": videos}
+    return render(request, "lugares/detalle.html", context)
+
+
 def sugerir(request):
-    """Formulario público para proponer un lugar o un evento nuevo.
-    Queda pendiente de aprobación (aprobado=False) hasta que el admin
-    lo revisa desde el panel de administración."""
+    """Formulario público para proponer un lugar, un evento, o una foto/video
+    para un lugar ya existente. Queda pendiente de aprobación (aprobado=False)
+    hasta que el admin lo revisa desde el panel de administración."""
+    lugar_preseleccionado = request.GET.get("lugar")
+
     lugar_form = SugerenciaLugarForm(prefix="lugar")
     evento_form = SugerenciaEventoForm(prefix="evento")
-    tipo_activo = "lugar"
+    multimedia_form = SugerenciaMultimediaForm(
+        prefix="multimedia",
+        initial={"lugar": lugar_preseleccionado} if lugar_preseleccionado else None,
+    )
+    tipo_activo = "multimedia" if lugar_preseleccionado else "lugar"
 
     if request.method == "POST":
         # Honeypot: campo oculto que solo un bot llenaría.
@@ -102,7 +120,6 @@ def sugerir(request):
             return redirect("lugares:sugerir")
 
         tipo_activo = request.POST.get("tipo", "lugar")
-
         autor = request.user if request.user.is_authenticated else None
 
         if tipo_activo == "evento":
@@ -115,6 +132,18 @@ def sugerir(request):
                 messages.success(
                     request,
                     "¡Gracias! Tu evento fue enviado y quedará visible apenas sea revisado.",
+                )
+                return redirect("lugares:sugerir")
+        elif tipo_activo == "multimedia":
+            multimedia_form = SugerenciaMultimediaForm(request.POST, request.FILES, prefix="multimedia")
+            if multimedia_form.is_valid():
+                media = multimedia_form.save(commit=False)
+                media.aprobado = False
+                media.creado_por = autor
+                media.save()
+                messages.success(
+                    request,
+                    "¡Gracias! Tu foto/video fue enviado y quedará visible apenas sea revisado.",
                 )
                 return redirect("lugares:sugerir")
         else:
@@ -133,6 +162,7 @@ def sugerir(request):
     context = {
         "lugar_form": lugar_form,
         "evento_form": evento_form,
+        "multimedia_form": multimedia_form,
         "tipo_activo": tipo_activo,
     }
     return render(request, "lugares/sugerir.html", context)

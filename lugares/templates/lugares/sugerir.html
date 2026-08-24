@@ -46,6 +46,7 @@
             <div class="tabs">
                 <button type="button" class="tab-btn" data-tipo="lugar">📍 Nuevo lugar</button>
                 <button type="button" class="tab-btn" data-tipo="evento">📅 Nuevo evento</button>
+                <button type="button" class="tab-btn" data-tipo="multimedia">📷 Foto o video</button>
             </div>
 
             <form class="formulario" id="form-lugar" method="post" enctype="multipart/form-data" novalidate>
@@ -143,6 +144,39 @@
                 <button type="submit" class="btn-enviar">Enviar evento para revisión</button>
             </form>
 
+            <form class="formulario" id="form-multimedia" method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="multimedia">
+                <input class="honeypot" type="text" name="sitio_web" tabindex="-1" autocomplete="off">
+
+                <div class="campo">
+                    <label for="{{ multimedia_form.lugar.id_for_label }}">Lugar</label>
+                    {{ multimedia_form.lugar }}
+                    {{ multimedia_form.lugar.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ multimedia_form.tipo.id_for_label }}">Tipo</label>
+                    {{ multimedia_form.tipo }}
+                    {{ multimedia_form.tipo.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ multimedia_form.archivo.id_for_label }}">Archivo (foto, o video si no usas un link de YouTube)</label>
+                    {{ multimedia_form.archivo }}
+                    {{ multimedia_form.archivo.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ multimedia_form.url_video.id_for_label }}">O link de YouTube (solo para video)</label>
+                    {{ multimedia_form.url_video }}
+                    {{ multimedia_form.url_video.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ multimedia_form.descripcion.id_for_label }}">Descripción (opcional)</label>
+                    {{ multimedia_form.descripcion }}
+                    {{ multimedia_form.descripcion.errors }}
+                </div>
+                <button type="submit" class="btn-enviar">Enviar foto/video para revisión</button>
+            </form>
+
             <p class="aviso">Tu sugerencia no aparece de inmediato: un administrador la revisa antes de publicarla en el mapa.</p>
 {% endblock %}
 
@@ -152,6 +186,7 @@
         const formularios = {
             lugar: document.getElementById('form-lugar'),
             evento: document.getElementById('form-evento'),
+            multimedia: document.getElementById('form-multimedia'),
         };
 
         function activarTipo(tipo) {

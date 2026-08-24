@@ -216,6 +216,15 @@
         .popup-lugar .etiqueta {
             font-weight: 600;
         }
+        .link-galeria {
+            color: var(--verde-oscuro);
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-decoration: none;
+        }
+        .link-galeria:hover {
+            text-decoration: underline;
+        }
         .btn-como-llegar {
             display: inline-flex;
             align-items: center;
@@ -566,6 +575,7 @@
                     <p><span class="etiqueta">Dirección:</span> ${lugar.direccion}</p>
                     ${lugar.horario ? `<p><span class="etiqueta">Horario:</span> ${lugar.horario}</p>` : ''}
                     <p><span class="etiqueta">Entrada:</span> ${costo}</p>
+                    <p><a class="link-galeria" href="${lugar.detalle_url}">📷 ${lugar.multimedia_count > 0 ? `Ver ${lugar.multimedia_count} foto(s)/video(s)` : 'Agregar fotos y videos'}</a></p>
                     <button class="btn-como-llegar" data-lat="${lugar.lat}" data-lng="${lugar.lng}" data-nombre="${lugar.nombre.replace(/"/g, '&quot;')}">🧭 Cómo llegar</button>
                 </div>
             `;

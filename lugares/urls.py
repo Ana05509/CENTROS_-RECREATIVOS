@@ -8,4 +8,5 @@ urlpatterns = [
     path("", views.inicio, name="inicio"),
     path("mapa/", views.mapa, name="mapa"),
     path("sugerir/", views.sugerir, name="sugerir"),
+    path("lugar/<int:lugar_id>/", views.detalle_lugar, name="detalle"),
 ]
