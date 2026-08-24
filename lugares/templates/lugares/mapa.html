@@ -299,6 +299,15 @@
             cursor: pointer;
         }
         .boton-ubicacion:hover { background: #f4f4f4; }
+        .boton-ubicacion.activo {
+            background: #4285F4;
+            color: #fff;
+            animation: pulso-seguimiento 1.6s ease-in-out infinite;
+        }
+        @keyframes pulso-seguimiento {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.45); }
+            50% { box-shadow: 0 0 0 6px rgba(66, 133, 244, 0); }
+        }
 
         #barra-ruta {
             display: none;
@@ -688,12 +697,14 @@
         const capaRutasEl = document.getElementById('capa-rutas');
 
         // ==============================
-        // 📍 Ubicación en vivo (tipo GPS)
+        // 📍 Ubicación en vivo (tipo GPS) + modo "seguirme"
         // ==============================
         let miUbicacion = null;
         let marcadorUbicacion = null;
         let circuloPrecision = null;
         let watchId = null;
+        let siguiendoUbicacion = false;
+        let botonUbicacionEl = null;
 
         const iconoUbicacion = L.divIcon({
             className: '',
@@ -701,6 +712,16 @@
             iconSize: [16, 16],
             iconAnchor: [8, 8],
         });
+
+        function fijarSeguimiento(activo) {
+            siguiendoUbicacion = activo;
+            if (botonUbicacionEl) {
+                botonUbicacionEl.classList.toggle('activo', activo);
+                botonUbicacionEl.title = activo
+                    ? 'Siguiendo tu ubicación (toca para dejar de seguir)'
+                    : 'Mi ubicación (toca para seguirme mientras te mueves)';
+            }
+        }
 
         function actualizarUbicacion(lat, lng, precision) {
             miUbicacion = [lat, lng];
@@ -716,6 +737,11 @@
                 circuloPrecision.setLatLng(miUbicacion);
                 circuloPrecision.setRadius(precision);
             }
+            // Modo "seguirme": recentra el mapa en cada actualización de posición,
+            // manteniendo el zoom que ya tenía el usuario (como una app de GPS).
+            if (siguiendoUbicacion) {
+                map.setView(miUbicacion, map.getZoom(), { animate: true });
+            }
         }
 
         function activarMiUbicacion(centrar) {
@@ -725,15 +751,15 @@
             }
             if (watchId === null) {
                 watchId = navigator.geolocation.watchPosition(
-                    (pos) => {
-                        actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-                        if (centrar) { map.setView(miUbicacion, 15); }
-                    },
+                    (pos) => actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
                     (err) => alert('No se pudo obtener tu ubicación: ' + err.message),
                     { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
                 );
-            } else if (miUbicacion) {
-                map.setView(miUbicacion, 15);
+                if (centrar) { fijarSeguimiento(true); }
+            } else {
+                // Ya hay GPS activo: el botón alterna el modo "seguirme".
+                fijarSeguimiento(!siguiendoUbicacion);
+                if (siguiendoUbicacion && miUbicacion) { map.setView(miUbicacion, map.getZoom()); }
             }
         }
 
@@ -741,12 +767,19 @@
         controlUbicacion.onAdd = function () {
             const div = L.DomUtil.create('div', 'leaflet-bar boton-ubicacion');
             div.innerHTML = '📍';
-            div.title = 'Mi ubicación';
+            div.title = 'Mi ubicación (toca para seguirme mientras te mueves)';
             L.DomEvent.disableClickPropagation(div);
             L.DomEvent.on(div, 'click', () => activarMiUbicacion(true));
+            botonUbicacionEl = div;
             return div;
         };
         controlUbicacion.addTo(map);
+
+        // Si el usuario arrastra el mapa manualmente, se sale del modo
+        // "seguirme" para no pelear con su gesto (igual que Google Maps).
+        map.on('dragstart', () => {
+            if (siguiendoUbicacion) { fijarSeguimiento(false); }
+        });
 
         // ==============================
         // 🧭 Cómo llegar (ruta real por calles, vía OSRM)
