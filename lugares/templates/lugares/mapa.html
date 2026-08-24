@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Recreativo de La Maná</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <style>
+        :root {
+            --verde-oscuro: #1f6e43;
+            --verde: #2e8b57;
+            --verde-claro: #eaf6ee;
+            --texto: #1a2b22;
+            --borde: #d5e6da;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--texto);
+        }
+        .app {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+        #sidebar {
+            width: 320px;
+            min-width: 280px;
+            background: var(--verde-claro);
+            border-right: 1px solid var(--borde);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #sidebar header {
+            background: var(--verde-oscuro);
+            color: #fff;
+            padding: 16px 18px;
+        }
+        #sidebar header h1 {
+            margin: 0 0 4px;
+            font-size: 1.1rem;
+        }
+        #sidebar header p {
+            margin: 0;
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        #filtros {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--borde);
+        }
+        #filtros label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+        #buscador {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        #categoria-select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: #fff;
+        }
+        #lista {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+        .lugar-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--borde);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .lugar-item:hover, .lugar-item.activo {
+            background: #d7ecdd;
+        }
+        .lugar-item .nombre {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .lugar-item .categoria {
+            font-size: 0.75rem;
+            color: var(--verde-oscuro);
+        }
+        #contador {
+            padding: 8px 16px;
+            font-size: 0.78rem;
+            color: #4a5c52;
+            border-top: 1px solid var(--borde);
+            background: #fff;
+        }
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        .popup-lugar h3 {
+            margin: 0 0 6px;
+            font-size: 1rem;
+            color: var(--verde-oscuro);
+        }
+        .popup-lugar img {
+            width: 100%;
+            max-width: 220px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .popup-lugar p {
+            margin: 3px 0;
+            font-size: 0.85rem;
+        }
+        .popup-lugar .etiqueta {
+            font-weight: 600;
+        }
+        @media (max-width: 720px) {
+            .app { flex-direction: column; }
+            #sidebar { width: 100%; height: 45%; }
+            #map { height: 55%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside id="sidebar">
+            <header>
+                <h1>🌿 Mapa Recreativo de La Maná</h1>
+                <p>Centros recreativos, ríos, cascadas y balnearios</p>
+            </header>
+            <div id="filtros">
+                <label for="buscador">Buscar por nombre</label>
+                <input type="text" id="buscador" placeholder="Ej. Cascada, Río...">
+                <label for="categoria-select">Categoría</label>
+                <select id="categoria-select">
+                    <option value="">Todas las categorías</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria }}">{{ categoria }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="lista"></div>
+            <div id="contador">{{ total_lugares }} lugares en total</div>
+        </aside>
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        const LUGARES = {{ lugares_json|safe }};
+        const CENTRO = [{{ centro.lat }}, {{ centro.lng }}];
+
+        const map = L.map('map').setView(CENTRO, 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19,
+        }).addTo(map);
+
+        const marcadores = new Map();
+        const listaEl = document.getElementById('lista');
+        const buscadorEl = document.getElementById('buscador');
+        const categoriaEl = document.getElementById('categoria-select');
+        const contadorEl = document.getElementById('contador');
+
+        function popupHTML(lugar) {
+            const imagen = lugar.imagen ? `<img src="${lugar.imagen}" alt="${lugar.nombre}">` : '';
+            const costo = parseFloat(lugar.costo_entrada) > 0
+                ? `$${parseFloat(lugar.costo_entrada).toFixed(2)}`
+                : 'Gratis';
+            return `
+                <div class="popup-lugar">
+                    ${imagen}
+                    <h3>${lugar.nombre}</h3>
+                    <p><span class="etiqueta">Categoría:</span> ${lugar.categoria}</p>
+                    <p>${lugar.descripcion}</p>
+                    <p><span class="etiqueta">Dirección:</span> ${lugar.direccion}</p>
+                    ${lugar.horario ? `<p><span class="etiqueta">Horario:</span> ${lugar.horario}</p>` : ''}
+                    <p><span class="etiqueta">Entrada:</span> ${costo}</p>
+                </div>
+            `;
+        }
+
+        LUGARES.forEach((lugar) => {
+            const marker = L.marker([lugar.lat, lugar.lng]).addTo(map);
+            marker.bindPopup(popupHTML(lugar));
+            marcadores.set(lugar.id, marker);
+
+            const item = document.createElement('div');
+            item.className = 'lugar-item';
+            item.dataset.id = lugar.id;
+            item.dataset.nombre = lugar.nombre.toLowerCase();
+            item.dataset.categoria = lugar.categoria;
+            item.innerHTML = `
+                <div class="nombre">${lugar.nombre}</div>
+                <div class="categoria">${lugar.categoria}</div>
+            `;
+            item.addEventListener('click', () => {
+                map.setView([lugar.lat, lugar.lng], 15);
+                marker.openPopup();
+            });
+            listaEl.appendChild(item);
+        });
+
+        function aplicarFiltros() {
+            const texto = buscadorEl.value.trim().toLowerCase();
+            const categoria = categoriaEl.value;
+            let visibles = 0;
+
+            document.querySelectorAll('.lugar-item').forEach((item) => {
+                const coincideTexto = item.dataset.nombre.includes(texto);
+                const coincideCategoria = !categoria || item.dataset.categoria === categoria;
+                const visible = coincideTexto && coincideCategoria;
+                item.style.display = visible ? '' : 'none';
+
+                const marker = marcadores.get(parseInt(item.dataset.id, 10));
+                if (marker) {
+                    if (visible) {
+                        marker.addTo(map);
+                        visibles += 1;
+                    } else {
+                        map.removeLayer(marker);
+                    }
+                }
+            });
+
+            contadorEl.textContent = `${visibles} de {{ total_lugares }} lugares`;
+        }
+
+        buscadorEl.addEventListener('input', aplicarFiltros);
+        categoriaEl.addEventListener('change', aplicarFiltros);
+    </script>
+</body>
+</html>
