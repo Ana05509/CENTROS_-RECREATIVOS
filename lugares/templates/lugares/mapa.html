@@ -672,6 +672,13 @@
         buscadorEl.addEventListener('input', aplicarFiltros);
         categoriaEl.addEventListener('change', aplicarFiltros);
 
+        // Si se llega desde el portal con ?categoria=Cascadas, se preselecciona.
+        const categoriaSolicitada = new URLSearchParams(window.location.search).get('categoria');
+        if (categoriaSolicitada && [...categoriaEl.options].some((o) => o.value === categoriaSolicitada)) {
+            categoriaEl.value = categoriaSolicitada;
+            aplicarFiltros();
+        }
+
         document.getElementById('capa-lugares').addEventListener('change', (e) => {
             if (e.target.checked) { map.addLayer(capaLugares); } else { map.removeLayer(capaLugares); }
         });

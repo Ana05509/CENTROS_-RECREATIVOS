@@ -16,7 +16,7 @@
             --texto-suave: #5c6e64;
             --borde: #d5e6da;
             --sombra: 0 2px 10px rgba(20, 60, 40, 0.07);
-            --sombra-fuerte: 0 10px 28px rgba(20, 60, 40, 0.14);
+            --sombra-fuerte: 0 14px 34px rgba(20, 60, 40, 0.16);
             --fuente-titulo: "Poppins", "Segoe UI", Arial, sans-serif;
         }
         * { box-sizing: border-box; }
@@ -26,44 +26,98 @@
             color: var(--texto);
             background: var(--verde-claro);
         }
-        nav {
+        a { color: inherit; }
+
+        /* ===== Barra de navegación ===== */
+        nav.principal {
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 20;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 24px;
+            gap: 16px;
+            padding: 12px 28px;
             background: #fff;
             border-bottom: 1px solid var(--borde);
             box-shadow: var(--sombra);
         }
-        nav .marca {
+        .marca {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .marca .logo {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+        }
+        .marca .marca-texto strong {
+            display: block;
             font-family: var(--fuente-titulo);
+            font-size: 0.98rem;
             font-weight: 700;
             color: var(--verde-oscuro);
-            font-size: 1.05rem;
+            line-height: 1.2;
         }
-        nav .acciones {
+        .marca .marca-texto small {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--texto-suave);
+            letter-spacing: 0.02em;
+        }
+        .nav-links {
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 4px;
             flex-wrap: wrap;
         }
-        nav a, nav button {
-            font-size: 0.85rem;
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.86rem;
             font-weight: 600;
             text-decoration: none;
-            padding: 7px 14px;
-            border-radius: 18px;
+            color: var(--texto-suave);
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-link:hover {
+            background: var(--verde-claro);
+            color: var(--verde-oscuro);
+        }
+        .nav-link.activo {
+            background: var(--verde-claro);
+            color: var(--verde-oscuro);
+        }
+        .nav-cuenta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .nav-cuenta a, .nav-cuenta button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 9px 16px;
+            border-radius: 20px;
             border: none;
             cursor: pointer;
             font-family: inherit;
+            white-space: nowrap;
         }
         .btn-linea {
             color: var(--verde-oscuro);
             background: transparent;
-            border: 1px solid var(--verde-oscuro) !important;
+            border: 1.5px solid var(--verde-oscuro) !important;
         }
         .btn-lleno {
             color: #fff;
@@ -76,114 +130,378 @@
             margin: 0;
             display: inline-block;
         }
+
+        /* ===== Hero ===== */
         .hero {
-            text-align: center;
-            padding: 72px 20px 52px;
-            max-width: 720px;
-            margin: 0 auto;
-            background: radial-gradient(ellipse at top, rgba(46,139,87,0.10), transparent 65%);
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: stretch;
+            min-height: 460px;
+            overflow: hidden;
+            background:
+                linear-gradient(120deg, var(--verde-claro) 0%, var(--verde-claro) 46%, transparent 62%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px),
+                linear-gradient(155deg, #1c5f7a 0%, #1f6e43 55%, #16502f 100%);
         }
-        .hero .emoji {
-            font-size: 2.8rem;
+        .hero-contenido {
+            position: relative;
+            z-index: 2;
+            padding: 68px 24px 92px 44px;
+            max-width: 620px;
+        }
+        .hero-iconos {
+            display: flex;
+            gap: 10px;
+            font-size: 1.5rem;
+            margin-bottom: 14px;
+        }
+        .hero-iconos span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--sombra);
         }
         .hero h1 {
             font-family: var(--fuente-titulo);
-            font-size: 2.1rem;
+            font-size: 2.3rem;
             font-weight: 700;
-            color: var(--verde-oscuro);
-            margin: 10px 0 14px;
             line-height: 1.25;
+            margin: 0 0 16px;
+            color: var(--texto);
+        }
+        .hero h1 .resaltado {
+            color: var(--verde-oscuro);
         }
         .hero p {
-            font-size: 1.04rem;
+            font-size: 1.02rem;
             color: var(--texto-suave);
-            line-height: 1.55;
+            line-height: 1.6;
             margin: 0 0 30px;
+            max-width: 480px;
         }
-        .hero .cta {
+        .hero-cta {
             display: flex;
-            gap: 12px;
-            justify-content: center;
+            gap: 14px;
             flex-wrap: wrap;
         }
-        .cta a {
+        .hero-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             text-decoration: none;
             font-weight: 700;
             font-size: 0.95rem;
-            padding: 13px 26px;
-            border-radius: 24px;
+            padding: 14px 26px;
+            border-radius: 26px;
             transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
         }
-        .cta .principal {
+        .hero-cta .principal {
             background: var(--verde-oscuro);
             color: #fff;
             box-shadow: var(--sombra-fuerte);
         }
-        .cta .secundario {
+        .hero-cta .secundario {
             background: #fff;
             color: var(--verde-oscuro);
-            border: 1px solid var(--verde-oscuro);
+            border: 1.5px solid var(--verde-oscuro);
         }
-        .cta a:hover {
+        .hero-cta a:hover {
             transform: translateY(-2px);
-            opacity: 0.92;
+            opacity: 0.94;
         }
-        .stats {
-            max-width: 760px;
-            margin: 0 auto 64px;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+        .hero-foto {
+            position: relative;
         }
-        .stat {
-            background: #fff;
-            border: 1px solid var(--borde);
+        .hero-cita {
+            position: absolute;
+            right: 34px;
+            bottom: 84px;
+            z-index: 3;
+            max-width: 260px;
+            margin: 0;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(2px);
             border-radius: 14px;
-            padding: 22px 12px;
-            text-align: center;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .stat:hover {
-            transform: translateY(-3px);
+            padding: 16px 18px;
             box-shadow: var(--sombra-fuerte);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--texto);
         }
-        .stat .icono {
-            font-size: 1.3rem;
+        .hero-cita .comillas {
+            font-family: var(--fuente-titulo);
+            font-size: 1.6rem;
+            color: var(--verde);
+            line-height: 0;
+            display: block;
             margin-bottom: 4px;
         }
+
+        /* ===== Barra de estadísticas (flota sobre el borde del hero) ===== */
+        .stats-envoltorio {
+            position: relative;
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .stats {
+            position: relative;
+            margin-top: -46px;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: var(--sombra-fuerte);
+            padding: 22px 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 10px;
+        }
+        .stat .icono-circulo {
+            flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .stat.verde .icono-circulo { background: #dcf3e3; }
+        .stat.naranja .icono-circulo { background: #fde8cf; }
+        .stat.azul .icono-circulo { background: #dbeafe; }
+        .stat.morado .icono-circulo { background: #ece7fb; }
         .stat .numero {
             font-family: var(--fuente-titulo);
-            font-size: 1.7rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--verde-oscuro);
+            color: var(--texto);
+            line-height: 1.1;
         }
         .stat .etiqueta {
-            font-size: 0.75rem;
-            color: var(--texto-suave);
-            margin-top: 2px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--texto);
         }
-        footer {
-            text-align: center;
-            padding: 24px 20px;
+        .stat .detalle {
+            font-size: 0.72rem;
+            color: var(--texto-suave);
+        }
+
+        /* ===== Explora por categoría ===== */
+        .categorias {
+            max-width: 1040px;
+            margin: 74px auto 10px;
+            padding: 0 24px;
+            position: relative;
+        }
+        .categorias-encabezado h2 {
+            font-family: var(--fuente-titulo);
+            font-size: 1.25rem;
+            margin: 0 0 4px;
+            color: var(--texto);
+        }
+        .categorias-encabezado p {
+            margin: 0 0 20px;
+            font-size: 0.88rem;
+            color: var(--texto-suave);
+        }
+        .categorias-scroll {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-snap-type: x proximity;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+        }
+        .categoria-card {
+            position: relative;
+            flex: 0 0 200px;
+            height: 220px;
+            border-radius: 16px;
+            overflow: hidden;
+            text-decoration: none;
+            color: #fff;
+            scroll-snap-align: start;
+            box-shadow: var(--sombra);
+            transition: transform 0.18s, box-shadow 0.18s;
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%);
+        }
+        .categoria-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--sombra-fuerte);
+        }
+        .categoria-card.tema-agua { background-color: #1f6e43; background-image:
+            linear-gradient(to bottom, rgba(10,30,25,0) 38%, rgba(6,20,18,0.68) 100%),
+            linear-gradient(155deg, #2fa0c9, #1f6e43 75%); }
+        .categoria-card.tema-naturaleza { background-color: #1f6e43; background-image:
+            linear-gradient(to bottom, rgba(10,30,25,0) 38%, rgba(6,20,18,0.68) 100%),
+            linear-gradient(155deg, #58b884, #1a5233 75%); }
+        .categoria-card.tema-infraestructura { background-color: #7a5c2e; background-image:
+            linear-gradient(to bottom, rgba(30,20,10,0) 38%, rgba(20,14,8,0.68) 100%),
+            linear-gradient(155deg, #d99b4e, #7a5c2e 75%); }
+        .categoria-icono {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 38px;
+            height: 38px;
+            background: rgba(255,255,255,0.92);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .categoria-info {
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+            right: 40px;
+        }
+        .categoria-info strong {
+            display: block;
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+        .categoria-info small {
+            font-size: 0.76rem;
+            opacity: 0.9;
+        }
+        .categoria-flecha {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .categorias-siguiente {
+            display: none;
+            position: absolute;
+            top: 130px;
+            right: 4px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #fff;
+            box-shadow: var(--sombra-fuerte);
+            font-size: 1.1rem;
+            color: var(--verde-oscuro);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (min-width: 780px) {
+            .categorias-siguiente { display: flex; }
+        }
+
+        /* ===== Ventajas / acerca de ===== */
+        .features {
+            max-width: 1040px;
+            margin: 56px auto 0;
+            padding: 26px 24px;
+        }
+        .features-caja {
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-radius: 16px;
+            padding: 26px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
+        }
+        .feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .feature .icono-circulo {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--verde-claro);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .feature strong {
+            display: block;
+            font-size: 0.86rem;
+            margin-bottom: 2px;
+        }
+        .feature p {
+            margin: 0;
             font-size: 0.78rem;
             color: var(--texto-suave);
-            border-top: 1px solid var(--borde);
+            line-height: 1.45;
         }
-        @media (max-width: 560px) {
-            .stats { grid-template-columns: repeat(2, 1fr); }
-            .hero { padding: 48px 18px 40px; }
-            .hero h1 { font-size: 1.55rem; }
-            .hero p { font-size: 0.95rem; }
-            nav { padding: 12px 16px; }
-            nav .marca { font-size: 0.92rem; }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px 40px;
+            font-size: 0.78rem;
+            color: var(--texto-suave);
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; min-height: 0; }
+            .hero-contenido { padding: 44px 20px 40px; max-width: none; }
+            .hero-foto { display: none; }
+            .stats { margin-top: 20px; grid-template-columns: repeat(2, 1fr); }
+            .features-caja { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            nav.principal { flex-wrap: wrap; padding: 12px 16px; }
+            .nav-links { order: 3; width: 100%; justify-content: flex-start; overflow-x: auto; }
+            .hero h1 { font-size: 1.65rem; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .features-caja { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <nav>
-        <span class="marca">🌿 Mapa Recreativo de La Maná</span>
-        <div class="acciones">
+    <nav class="principal">
+        <a class="marca" href="{% url 'lugares:inicio' %}">
+            <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="24" fill="#eaf6ee"/>
+                <path d="M8 30 L18 14 L26 26 L31 18 L40 30 Z" fill="#2e8b57"/>
+                <circle cx="16" cy="15" r="5" fill="#1f6e43"/>
+                <rect x="15" y="18" width="2" height="7" fill="#7a5c2e"/>
+                <path d="M4 34 Q16 28 24 34 T44 34" stroke="#2fa0c9" stroke-width="3" fill="none" stroke-linecap="round"/>
+            </svg>
+            <span class="marca-texto">
+                <strong>Mapa Recreativo<br>de La Maná</strong>
+                <small>Conoce · Disfruta · Cuida</small>
+            </span>
+        </a>
+        <div class="nav-links">
+            <a class="nav-link activo" href="{% url 'lugares:inicio' %}">🏠 Inicio</a>
+            <a class="nav-link" href="{% url 'lugares:mapa' %}">🗺️ Mapa</a>
+            <a class="nav-link" href="{% url 'lugares:mapa' %}">📍 Lugares</a>
+            <a class="nav-link" href="{% url 'lugares:mapa' %}">🔀 Rutas</a>
+            <a class="nav-link" href="{% url 'lugares:mapa' %}">🍃 Recursos</a>
+            <a class="nav-link" href="#acerca">ℹ️ Acerca de</a>
+        </div>
+        <div class="nav-cuenta">
             {% if user.is_authenticated %}
                 <a class="btn-linea" href="{% url 'usuarios:mis_sugerencias' %}">👤 {{ user.username }}</a>
                 <form action="{% url 'usuarios:logout' %}" method="post" class="form-salir-nav">
@@ -191,50 +509,113 @@
                     <button type="submit" class="btn-linea">Salir</button>
                 </form>
             {% else %}
-                <a class="btn-linea" href="{% url 'usuarios:login' %}">Iniciar sesión</a>
-                <a class="btn-lleno" href="{% url 'usuarios:registro' %}">Registrarse</a>
+                <a class="btn-linea" href="{% url 'usuarios:login' %}">👤 Iniciar sesión</a>
+                <a class="btn-lleno" href="{% url 'usuarios:registro' %}">➕ Registrarse</a>
             {% endif %}
         </div>
     </nav>
 
     <section class="hero">
-        <div class="emoji">🌳🏞️💧</div>
-        <h1>Descubre los centros recreativos del Cantón La Maná</h1>
-        <p>
-            Un mapa web interactivo con centros recreativos, ríos, cascadas, balnearios,
-            recursos naturales, infraestructura y rutas de acceso — hecho por y para la comunidad.
-        </p>
-        <div class="cta">
-            <a class="principal" href="{% url 'lugares:mapa' %}">🗺️ Ver el mapa interactivo</a>
-            <a class="secundario" href="{% url 'lugares:sugerir' %}">➕ Sugerir un lugar o evento</a>
+        <div class="hero-contenido">
+            <div class="hero-iconos"><span>🌳</span><span>🏞️</span><span>💧</span></div>
+            <h1>Descubre los centros recreativos del<br><span class="resaltado">Cantón La Maná</span></h1>
+            <p>
+                Un mapa web interactivo con centros recreativos, ríos, cascadas, balnearios,
+                recursos naturales, infraestructura y rutas de acceso — hecho por y para la comunidad.
+            </p>
+            <div class="hero-cta">
+                <a class="principal" href="{% url 'lugares:mapa' %}">🗺️ Ver el mapa interactivo →</a>
+                <a class="secundario" href="{% url 'lugares:sugerir' %}">➕ Sugerir un lugar o evento</a>
+            </div>
+        </div>
+        <div class="hero-foto">
+            <blockquote class="hero-cita">
+                <span class="comillas">“</span>
+                Conoce la belleza natural de La Maná y fortalezcamos juntos nuestra comunidad. 💚
+            </blockquote>
         </div>
     </section>
 
-    <section class="stats">
-        <div class="stat">
-            <div class="icono">📍</div>
-            <div class="numero">{{ stats.lugares }}</div>
-            <div class="etiqueta">Lugares recreativos</div>
+    <div class="stats-envoltorio">
+        <div class="stats">
+            {% for stat in stats %}
+                <div class="stat {{ stat.color }}">
+                    <span class="icono-circulo">{{ stat.icono }}</span>
+                    <span>
+                        <span class="numero">{{ stat.numero }}</span><br>
+                        <span class="etiqueta">{{ stat.etiqueta }}</span><br>
+                        <span class="detalle">{{ stat.detalle }}</span>
+                    </span>
+                </div>
+            {% endfor %}
         </div>
-        <div class="stat">
-            <div class="icono">🏷️</div>
-            <div class="numero">{{ stats.categorias }}</div>
-            <div class="etiqueta">Categorías</div>
+    </div>
+
+    <section class="categorias" id="categorias">
+        <div class="categorias-encabezado">
+            <h2>🍃 Explora por categoría</h2>
+            <p>Encuentra los mejores lugares según tus intereses</p>
         </div>
-        <div class="stat">
-            <div class="icono">🌎</div>
-            <div class="numero">{{ stats.puntos }}</div>
-            <div class="etiqueta">Recursos e infraestructura</div>
+        <div class="categorias-scroll" id="categorias-scroll">
+            {% for cat in categorias_destacadas %}
+                <a class="categoria-card tema-{{ cat.tema }}" href="{% url 'lugares:mapa' %}?categoria={{ cat.nombre|urlencode }}">
+                    <span class="categoria-icono">{{ cat.icono }}</span>
+                    <span class="categoria-info">
+                        <strong>{{ cat.nombre }}</strong>
+                        <small>{{ cat.total }} lugar{{ cat.total|pluralize:"es" }}</small>
+                    </span>
+                    <span class="categoria-flecha">→</span>
+                </a>
+            {% endfor %}
         </div>
-        <div class="stat">
-            <div class="icono">🛣️</div>
-            <div class="numero">{{ stats.rutas }}</div>
-            <div class="etiqueta">Rutas de acceso</div>
+        <button type="button" class="categorias-siguiente" id="categorias-siguiente" aria-label="Ver más categorías">›</button>
+    </section>
+
+    <section class="features" id="acerca">
+        <div class="features-caja">
+            <div class="feature">
+                <span class="icono-circulo">🛡️</span>
+                <span>
+                    <strong>Información confiable</strong>
+                    <p>Datos verificados y actualizados constantemente.</p>
+                </span>
+            </div>
+            <div class="feature">
+                <span class="icono-circulo">👥</span>
+                <span>
+                    <strong>Hecho por la comunidad</strong>
+                    <p>Tu participación hace crecer este mapa.</p>
+                </span>
+            </div>
+            <div class="feature">
+                <span class="icono-circulo">📱</span>
+                <span>
+                    <strong>Acceso desde cualquier lugar</strong>
+                    <p>Diseñado para móviles, tablets y computadoras.</p>
+                </span>
+            </div>
+            <div class="feature">
+                <span class="icono-circulo">🍃</span>
+                <span>
+                    <strong>Cuidemos La Maná</strong>
+                    <p>Disfruta responsablemente nuestros recursos naturales.</p>
+                </span>
+            </div>
         </div>
     </section>
 
     <footer>
         Cantón La Maná · Proyecto de mapa web interactivo con herramientas geoespaciales
     </footer>
+
+    <script>
+        const scrollEl = document.getElementById('categorias-scroll');
+        const botonSiguiente = document.getElementById('categorias-siguiente');
+        if (botonSiguiente && scrollEl) {
+            botonSiguiente.addEventListener('click', () => {
+                scrollEl.scrollBy({ left: 220, behavior: 'smooth' });
+            });
+        }
+    </script>
 </body>
 </html>

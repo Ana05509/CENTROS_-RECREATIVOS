@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -14,17 +15,75 @@ from .models import Categoria, Lugar, TipoMultimedia
 # Centro aproximado del cantón La Maná, usado cuando no hay lugares que centrar.
 CENTRO_LA_MANA = {"lat": -0.9431, "lng": -79.2312}
 
+# Ícono y tema visual (para el degradado de la tarjeta) por categoría, usados
+# en la sección "Explora por categoría" del portal. Las categorías que no
+# aparecen aquí caen en el tema/ícono por defecto.
+TEMA_CATEGORIA = {
+    "Cascadas": ("💦", "agua"),
+    "Ríos": ("🏞️", "agua"),
+    "Balnearios": ("🏊", "agua"),
+    "Piscinas": ("🏊‍♂️", "agua"),
+    "Parques Recreativos": ("🌳", "naturaleza"),
+    "Canchas Deportivas": ("⚽", "naturaleza"),
+    "Miradores": ("🔭", "naturaleza"),
+    "Área de Camping": ("⛺", "naturaleza"),
+    "Centros Vacacionales": ("🏨", "infraestructura"),
+    "Complejos Turísticos": ("🎡", "infraestructura"),
+}
+
 
 def inicio(request):
     """Portal público: presentación del proyecto, accesos a mapa, cuenta
     y sugerencias, más un resumen de lo que hay cargado hasta ahora."""
-    stats = {
-        "lugares": Lugar.objects.filter(aprobado=True).count(),
-        "categorias": Categoria.objects.count(),
-        "puntos": PuntoInteres.objects.count(),
-        "rutas": Ruta.objects.count(),
-    }
-    return render(request, "lugares/inicio.html", {"stats": stats})
+    stats = [
+        {
+            "numero": Lugar.objects.filter(aprobado=True).count(),
+            "etiqueta": "Lugares recreativos",
+            "detalle": "para visitar y disfrutar",
+            "icono": "📍",
+            "color": "verde",
+        },
+        {
+            "numero": Categoria.objects.count(),
+            "etiqueta": "Categorías",
+            "detalle": "de actividades y lugares",
+            "icono": "🏷️",
+            "color": "naranja",
+        },
+        {
+            "numero": PuntoInteres.objects.count(),
+            "etiqueta": "Recursos e infraestructura",
+            "detalle": "para el esparcimiento",
+            "icono": "💧",
+            "color": "azul",
+        },
+        {
+            "numero": Ruta.objects.count(),
+            "etiqueta": "Rutas de acceso",
+            "detalle": "para llegar fácilmente",
+            "icono": "🔀",
+            "color": "morado",
+        },
+    ]
+
+    categorias_con_lugares = (
+        Categoria.objects
+        .annotate(total=Count("lugar", filter=Q(lugar__aprobado=True)))
+        .filter(total__gt=0)
+        .order_by("-total")
+    )
+    categorias_destacadas = [
+        {
+            "nombre": categoria.nombre,
+            "total": categoria.total,
+            "icono": TEMA_CATEGORIA.get(categoria.nombre, ("📍", "naturaleza"))[0],
+            "tema": TEMA_CATEGORIA.get(categoria.nombre, ("📍", "naturaleza"))[1],
+        }
+        for categoria in categorias_con_lugares
+    ]
+
+    context = {"stats": stats, "categorias_destacadas": categorias_destacadas}
+    return render(request, "lugares/inicio.html", context)
 
 
 def mapa(request):
