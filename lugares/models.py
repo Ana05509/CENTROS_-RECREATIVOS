@@ -49,6 +49,13 @@ class Lugar(models.Model):
         null=True
     )
 
+    aprobado = models.BooleanField(
+        default=True,
+        help_text="Los lugares sugeridos por el público quedan sin aprobar "
+                   "hasta que el admin los revisa; no aparecen en el mapa "
+                   "público hasta entonces."
+    )
+
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -71,6 +78,12 @@ class Evento(models.Model):
         upload_to='eventos/',
         blank=True,
         null=True
+    )
+
+    aprobado = models.BooleanField(
+        default=True,
+        help_text="Los eventos sugeridos por el público quedan sin aprobar "
+                   "hasta que el admin los revisa."
     )
 
     def __str__(self):

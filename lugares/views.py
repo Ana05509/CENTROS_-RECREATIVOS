@@ -1,11 +1,13 @@
 import json
 
+from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from mapas.models import PuntoInteres
 from rutas.models import Ruta
 
+from .forms import SugerenciaEventoForm, SugerenciaLugarForm
 from .models import Lugar
 
 # Centro aproximado del cantón La Maná, usado cuando no hay lugares que centrar.
@@ -15,7 +17,7 @@ CENTRO_LA_MANA = {"lat": -0.9431, "lng": -79.2312}
 def mapa(request):
     """Mapa web interactivo con lugares recreativos, puntos de interés
     (recursos naturales e infraestructura) y rutas de acceso."""
-    lugares = Lugar.objects.select_related("categoria").order_by("nombre")
+    lugares = Lugar.objects.filter(aprobado=True).select_related("categoria").order_by("nombre")
 
     lugares_json = [
         {
@@ -72,3 +74,50 @@ def mapa(request):
         "centro": CENTRO_LA_MANA,
     }
     return render(request, "lugares/mapa.html", context)
+
+
+def sugerir(request):
+    """Formulario público para proponer un lugar o un evento nuevo.
+    Queda pendiente de aprobación (aprobado=False) hasta que el admin
+    lo revisa desde el panel de administración."""
+    lugar_form = SugerenciaLugarForm(prefix="lugar")
+    evento_form = SugerenciaEventoForm(prefix="evento")
+    tipo_activo = "lugar"
+
+    if request.method == "POST":
+        # Honeypot: campo oculto que solo un bot llenaría.
+        if request.POST.get("sitio_web"):
+            return redirect("lugares:sugerir")
+
+        tipo_activo = request.POST.get("tipo", "lugar")
+
+        if tipo_activo == "evento":
+            evento_form = SugerenciaEventoForm(request.POST, request.FILES, prefix="evento")
+            if evento_form.is_valid():
+                evento = evento_form.save(commit=False)
+                evento.aprobado = False
+                evento.save()
+                messages.success(
+                    request,
+                    "¡Gracias! Tu evento fue enviado y quedará visible apenas sea revisado.",
+                )
+                return redirect("lugares:sugerir")
+        else:
+            lugar_form = SugerenciaLugarForm(request.POST, request.FILES, prefix="lugar")
+            if lugar_form.is_valid():
+                lugar = lugar_form.save(commit=False)
+                lugar.aprobado = False
+                lugar.creado_por = None
+                lugar.save()
+                messages.success(
+                    request,
+                    "¡Gracias! Tu lugar fue enviado y aparecerá en el mapa apenas sea revisado.",
+                )
+                return redirect("lugares:sugerir")
+
+    context = {
+        "lugar_form": lugar_form,
+        "evento_form": evento_form,
+        "tipo_activo": tipo_activo,
+    }
+    return render(request, "lugares/sugerir.html", context)

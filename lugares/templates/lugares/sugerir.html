@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sugerir un lugar o evento — Mapa Recreativo de La Maná</title>
+    <style>
+        :root {
+            --verde-oscuro: #1f6e43;
+            --verde: #2e8b57;
+            --verde-claro: #eaf6ee;
+            --texto: #1a2b22;
+            --borde: #d5e6da;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--texto);
+            background: var(--verde-claro);
+        }
+        header {
+            background: var(--verde-oscuro);
+            color: #fff;
+            padding: 18px 20px;
+        }
+        header h1 {
+            margin: 0 0 4px;
+            font-size: 1.2rem;
+        }
+        header a {
+            color: #fff;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        main {
+            max-width: 560px;
+            margin: 24px auto;
+            padding: 0 16px 40px;
+        }
+        .tarjeta {
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--borde);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--texto);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .tab-btn.activo {
+            background: var(--verde);
+            border-color: var(--verde);
+            color: #fff;
+        }
+        .mensaje-exito {
+            background: #eaf6ee;
+            border: 1px solid var(--verde);
+            color: var(--verde-oscuro);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+        }
+        form.formulario { display: none; }
+        form.formulario.activo { display: block; }
+        .campo {
+            margin-bottom: 14px;
+        }
+        .campo label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .campo input[type=text],
+        .campo input[type=number],
+        .campo input[type=datetime-local],
+        .campo select,
+        .campo textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        .campo .ayuda {
+            font-size: 0.75rem;
+            color: #5c6e64;
+            margin-top: 3px;
+        }
+        .campo .errorlist {
+            list-style: none;
+            margin: 4px 0 0;
+            padding: 0;
+            color: #c0392b;
+            font-size: 0.78rem;
+        }
+        .fila-doble {
+            display: flex;
+            gap: 10px;
+        }
+        .fila-doble .campo {
+            flex: 1;
+        }
+        .honeypot {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+        .btn-enviar {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 20px;
+            background: var(--verde-oscuro);
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-enviar:hover {
+            background: var(--verde);
+        }
+        .aviso {
+            font-size: 0.78rem;
+            color: #5c6e64;
+            margin-top: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>➕ Sugerir un lugar o evento</h1>
+        <a href="{% url 'lugares:mapa' %}">← Volver al mapa</a>
+    </header>
+    <main>
+        <div class="tarjeta">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mensaje-exito">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="tabs">
+                <button type="button" class="tab-btn" data-tipo="lugar">📍 Nuevo lugar</button>
+                <button type="button" class="tab-btn" data-tipo="evento">📅 Nuevo evento</button>
+            </div>
+
+            <form class="formulario" id="form-lugar" method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="lugar">
+                <input class="honeypot" type="text" name="sitio_web" tabindex="-1" autocomplete="off">
+
+                <div class="campo">
+                    <label for="{{ lugar_form.nombre.id_for_label }}">Nombre del lugar</label>
+                    {{ lugar_form.nombre }}
+                    {{ lugar_form.nombre.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ lugar_form.categoria.id_for_label }}">Categoría</label>
+                    {{ lugar_form.categoria }}
+                    {{ lugar_form.categoria.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ lugar_form.descripcion.id_for_label }}">Descripción</label>
+                    {{ lugar_form.descripcion }}
+                    {{ lugar_form.descripcion.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ lugar_form.direccion.id_for_label }}">Dirección</label>
+                    {{ lugar_form.direccion }}
+                    {{ lugar_form.direccion.errors }}
+                </div>
+                <div class="fila-doble">
+                    <div class="campo">
+                        <label for="{{ lugar_form.latitud.id_for_label }}">Latitud</label>
+                        {{ lugar_form.latitud }}
+                        {{ lugar_form.latitud.errors }}
+                    </div>
+                    <div class="campo">
+                        <label for="{{ lugar_form.longitud.id_for_label }}">Longitud</label>
+                        {{ lugar_form.longitud }}
+                        {{ lugar_form.longitud.errors }}
+                    </div>
+                </div>
+                <p class="ayuda">Tip: abre el lugar en Google Maps, mantén presionado el punto y copia las coordenadas que aparecen.</p>
+                <div class="fila-doble">
+                    <div class="campo">
+                        <label for="{{ lugar_form.horario.id_for_label }}">Horario (opcional)</label>
+                        {{ lugar_form.horario }}
+                    </div>
+                    <div class="campo">
+                        <label for="{{ lugar_form.costo_entrada.id_for_label }}">Costo de entrada</label>
+                        {{ lugar_form.costo_entrada }}
+                        {{ lugar_form.costo_entrada.errors }}
+                    </div>
+                </div>
+                <div class="campo">
+                    <label for="{{ lugar_form.imagen.id_for_label }}">Foto (opcional)</label>
+                    {{ lugar_form.imagen }}
+                </div>
+                <button type="submit" class="btn-enviar">Enviar lugar para revisión</button>
+            </form>
+
+            <form class="formulario" id="form-evento" method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="evento">
+                <input class="honeypot" type="text" name="sitio_web" tabindex="-1" autocomplete="off">
+
+                <div class="campo">
+                    <label for="{{ evento_form.nombre.id_for_label }}">Nombre del evento</label>
+                    {{ evento_form.nombre }}
+                    {{ evento_form.nombre.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ evento_form.lugar.id_for_label }}">Lugar donde ocurre</label>
+                    {{ evento_form.lugar }}
+                    {{ evento_form.lugar.errors }}
+                </div>
+                <div class="campo">
+                    <label for="{{ evento_form.descripcion.id_for_label }}">Descripción</label>
+                    {{ evento_form.descripcion }}
+                    {{ evento_form.descripcion.errors }}
+                </div>
+                <div class="fila-doble">
+                    <div class="campo">
+                        <label for="{{ evento_form.fecha_inicio.id_for_label }}">Fecha y hora de inicio</label>
+                        {{ evento_form.fecha_inicio }}
+                        {{ evento_form.fecha_inicio.errors }}
+                    </div>
+                    <div class="campo">
+                        <label for="{{ evento_form.fecha_fin.id_for_label }}">Fecha y hora de fin</label>
+                        {{ evento_form.fecha_fin }}
+                        {{ evento_form.fecha_fin.errors }}
+                    </div>
+                </div>
+                <div class="campo">
+                    <label for="{{ evento_form.imagen.id_for_label }}">Imagen (opcional)</label>
+                    {{ evento_form.imagen }}
+                </div>
+                <button type="submit" class="btn-enviar">Enviar evento para revisión</button>
+            </form>
+
+            <p class="aviso">Tu sugerencia no aparece de inmediato: un administrador la revisa antes de publicarla en el mapa.</p>
+        </div>
+    </main>
+
+    <script>
+        const botones = document.querySelectorAll('.tab-btn');
+        const formularios = {
+            lugar: document.getElementById('form-lugar'),
+            evento: document.getElementById('form-evento'),
+        };
+
+        function activarTipo(tipo) {
+            botones.forEach((b) => b.classList.toggle('activo', b.dataset.tipo === tipo));
+            Object.entries(formularios).forEach(([clave, form]) => {
+                form.classList.toggle('activo', clave === tipo);
+            });
+        }
+
+        botones.forEach((b) => b.addEventListener('click', () => activarTipo(b.dataset.tipo)));
+
+        activarTipo('{{ tipo_activo }}');
+    </script>
+</body>
+</html>
