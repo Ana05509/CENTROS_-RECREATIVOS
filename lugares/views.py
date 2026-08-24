@@ -82,8 +82,27 @@ def inicio(request):
         for categoria in categorias_con_lugares
     ]
 
-    context = {"stats": stats, "categorias_destacadas": categorias_destacadas}
+    context = {"stats": stats, "categorias_destacadas": categorias_destacadas, "nav_activo": "inicio"}
     return render(request, "lugares/inicio.html", context)
+
+
+def lista_lugares(request):
+    """Catálogo público de todos los lugares recreativos aprobados,
+    con filtro opcional por categoría."""
+    categoria_nombre = request.GET.get("categoria", "")
+    lugares = Lugar.objects.filter(aprobado=True).select_related("categoria").order_by("nombre")
+    if categoria_nombre:
+        lugares = lugares.filter(categoria__nombre=categoria_nombre)
+
+    categorias = Categoria.objects.filter(lugar__aprobado=True).distinct().order_by("nombre")
+
+    context = {
+        "lugares": lugares,
+        "categorias": categorias,
+        "categoria_activa": categoria_nombre,
+        "nav_activo": "lugares",
+    }
+    return render(request, "lugares/lista.html", context)
 
 
 def mapa(request):

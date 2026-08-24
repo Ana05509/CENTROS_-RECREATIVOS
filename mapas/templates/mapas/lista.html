@@ -1,0 +1,133 @@
+{% extends "base_portal.html" %}
+
+{% block titulo %}Recursos e infraestructura — Mapa Recreativo de La Maná{% endblock %}
+
+{% block estilos_extra %}
+        main {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+        .encabezado-pagina h1 {
+            font-family: var(--fuente-titulo);
+            font-size: 1.5rem;
+            margin: 0 0 6px;
+            color: var(--texto);
+        }
+        .encabezado-pagina p {
+            margin: 0 0 30px;
+            font-size: 0.9rem;
+            color: var(--texto-suave);
+        }
+        .seccion-recursos {
+            margin-bottom: 34px;
+        }
+        .seccion-recursos h2 {
+            font-family: var(--fuente-titulo);
+            font-size: 1.1rem;
+            margin: 0 0 14px;
+            color: var(--verde-oscuro);
+        }
+        .grid-recursos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .recurso-card {
+            display: flex;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-radius: 14px;
+            padding: 16px;
+            text-decoration: none;
+            color: var(--texto);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .recurso-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--sombra-fuerte);
+        }
+        .recurso-card .icono {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .seccion-recursos.natural .icono { background: #dcf3e3; }
+        .seccion-recursos.infra .icono { background: #fde8cf; }
+        .recurso-card h3 {
+            font-size: 0.92rem;
+            margin: 0 0 4px;
+        }
+        .recurso-card .subtipo {
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--texto-suave);
+            margin-bottom: 4px;
+            display: block;
+        }
+        .recurso-card p {
+            font-size: 0.78rem;
+            color: var(--texto-suave);
+            margin: 0;
+            line-height: 1.4;
+        }
+        .vacio {
+            font-size: 0.88rem;
+            color: var(--texto-suave);
+        }
+{% endblock %}
+
+{% block contenido %}
+    <main>
+        <div class="encabezado-pagina">
+            <h1>🍃 Recursos e infraestructura</h1>
+            <p>Ríos, bosques y demás recursos naturales, más la infraestructura de acceso al cantón.</p>
+        </div>
+
+        <section class="seccion-recursos natural">
+            <h2>💧 Recursos naturales</h2>
+            {% if recursos_naturales %}
+                <div class="grid-recursos">
+                    {% for punto in recursos_naturales %}
+                        <a class="recurso-card" href="{% url 'lugares:mapa' %}?punto={{ punto.id }}">
+                            <span class="icono">🌊</span>
+                            <span>
+                                <h3>{{ punto.nombre }}</h3>
+                                {% if punto.subtipo %}<span class="subtipo">{{ punto.subtipo }}</span>{% endif %}
+                                <p>{{ punto.descripcion }}</p>
+                            </span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="vacio">Todavía no hay recursos naturales cargados.</p>
+            {% endif %}
+        </section>
+
+        <section class="seccion-recursos infra">
+            <h2>🏗️ Infraestructura</h2>
+            {% if infraestructura %}
+                <div class="grid-recursos">
+                    {% for punto in infraestructura %}
+                        <a class="recurso-card" href="{% url 'lugares:mapa' %}?punto={{ punto.id }}">
+                            <span class="icono">🏗️</span>
+                            <span>
+                                <h3>{{ punto.nombre }}</h3>
+                                {% if punto.subtipo %}<span class="subtipo">{{ punto.subtipo }}</span>{% endif %}
+                                <p>{{ punto.descripcion }}</p>
+                            </span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="vacio">Todavía no hay infraestructura cargada.</p>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

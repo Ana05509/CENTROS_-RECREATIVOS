@@ -1,0 +1,120 @@
+{% extends "base_portal.html" %}
+
+{% block titulo %}Rutas de acceso — Mapa Recreativo de La Maná{% endblock %}
+
+{% block estilos_extra %}
+        main {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+        .encabezado-pagina h1 {
+            font-family: var(--fuente-titulo);
+            font-size: 1.5rem;
+            margin: 0 0 6px;
+            color: var(--texto);
+        }
+        .encabezado-pagina p {
+            margin: 0 0 24px;
+            font-size: 0.9rem;
+            color: var(--texto-suave);
+        }
+        .ruta-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+        }
+        .ruta-card .icono {
+            flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--verde-claro);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .ruta-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .ruta-card h2 {
+            font-family: var(--fuente-titulo);
+            font-size: 1rem;
+            margin: 0 0 4px;
+        }
+        .ruta-card .trayecto {
+            font-size: 0.85rem;
+            color: var(--texto-suave);
+            margin: 0 0 6px;
+        }
+        .ruta-card .metricas {
+            display: flex;
+            gap: 14px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--verde-oscuro);
+        }
+        .ruta-card .ver-mapa {
+            flex-shrink: 0;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fff;
+            background: var(--verde-oscuro);
+            padding: 9px 16px;
+            border-radius: 18px;
+            white-space: nowrap;
+            transition: opacity 0.15s;
+        }
+        .ruta-card .ver-mapa:hover { opacity: 0.85; }
+        .vacio {
+            font-size: 0.9rem;
+            color: var(--texto-suave);
+            padding: 30px 0;
+        }
+        @media (max-width: 560px) {
+            .ruta-card { flex-wrap: wrap; }
+            .ruta-card .ver-mapa { width: 100%; text-align: center; }
+        }
+{% endblock %}
+
+{% block contenido %}
+    <main>
+        <div class="encabezado-pagina">
+            <h1>🔀 Rutas de acceso</h1>
+            <p>Cómo llegar a los lugares recreativos desde puntos de referencia conocidos.</p>
+        </div>
+
+        {% if rutas %}
+            {% for ruta in rutas %}
+                <div class="ruta-card">
+                    <span class="icono">
+                        {% if ruta.tipo_transporte == "vehiculo" %}🚗
+                        {% elif ruta.tipo_transporte == "a_pie" %}🚶
+                        {% elif ruta.tipo_transporte == "bicicleta" %}🚴
+                        {% else %}🚌{% endif %}
+                    </span>
+                    <div class="info">
+                        <h2>{{ ruta.nombre }}</h2>
+                        <p class="trayecto">{{ ruta.punto_partida }} → {{ ruta.lugar.nombre }}</p>
+                        <div class="metricas">
+                            <span>{{ ruta.get_tipo_transporte_display }}</span>
+                            {% if ruta.distancia_km %}<span>{{ ruta.distancia_km }} km</span>{% endif %}
+                            {% if ruta.tiempo_estimado %}<span>{{ ruta.tiempo_estimado }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <a class="ver-mapa" href="{% url 'lugares:mapa' %}?ruta={{ ruta.id }}">Ver en el mapa</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="vacio">Todavía no hay rutas cargadas.</p>
+        {% endif %}
+    </main>
+{% endblock %}

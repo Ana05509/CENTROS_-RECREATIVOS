@@ -613,10 +613,13 @@
             `;
         }
 
+        const puntosPorId = new Map();
+
         PUNTOS.forEach((punto) => {
-            L.marker([punto.lat, punto.lng], { icon: iconoPunto(punto.tipo) })
+            const marker = L.marker([punto.lat, punto.lng], { icon: iconoPunto(punto.tipo) })
                 .bindPopup(popupPunto(punto))
                 .addTo(capaPuntos);
+            puntosPorId.set(punto.id, marker);
         });
 
         function popupRuta(ruta) {
@@ -633,8 +636,10 @@
             `;
         }
 
+        const rutasPorId = new Map();
+
         RUTAS.forEach((ruta) => {
-            L.polyline(ruta.trazado, {
+            const linea = L.polyline(ruta.trazado, {
                 color: COLOR_RUTA[ruta.tipo_transporte] || '#555',
                 weight: 4,
                 opacity: 0.8,
@@ -642,6 +647,7 @@
             })
                 .bindPopup(popupRuta(ruta))
                 .addTo(capaRutas);
+            rutasPorId.set(ruta.id, linea);
         });
 
         function aplicarFiltros() {
@@ -673,10 +679,27 @@
         categoriaEl.addEventListener('change', aplicarFiltros);
 
         // Si se llega desde el portal con ?categoria=Cascadas, se preselecciona.
-        const categoriaSolicitada = new URLSearchParams(window.location.search).get('categoria');
+        const parametros = new URLSearchParams(window.location.search);
+        const categoriaSolicitada = parametros.get('categoria');
         if (categoriaSolicitada && [...categoriaEl.options].some((o) => o.value === categoriaSolicitada)) {
             categoriaEl.value = categoriaSolicitada;
             aplicarFiltros();
+        }
+
+        // ?ruta=<id> o ?punto=<id>: centra el mapa y abre el popup correspondiente
+        // (se llega aquí desde los botones "Ver en el mapa" de /rutas/ y /recursos/).
+        const rutaSolicitada = parseInt(parametros.get('ruta'), 10);
+        if (rutasPorId.has(rutaSolicitada)) {
+            const linea = rutasPorId.get(rutaSolicitada);
+            map.fitBounds(linea.getBounds(), { padding: [40, 40] });
+            linea.openPopup();
+        }
+
+        const puntoSolicitado = parseInt(parametros.get('punto'), 10);
+        if (puntosPorId.has(puntoSolicitado)) {
+            const marker = puntosPorId.get(puntoSolicitado);
+            map.setView(marker.getLatLng(), 15);
+            marker.openPopup();
         }
 
         document.getElementById('capa-lugares').addEventListener('change', (e) => {

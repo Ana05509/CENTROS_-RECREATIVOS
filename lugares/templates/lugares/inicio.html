@@ -1,136 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Recreativo de La Maná</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --verde-oscuro: #1f6e43;
-            --verde: #2e8b57;
-            --verde-claro: #eaf6ee;
-            --texto: #1a2b22;
-            --texto-suave: #5c6e64;
-            --borde: #d5e6da;
-            --sombra: 0 2px 10px rgba(20, 60, 40, 0.07);
-            --sombra-fuerte: 0 14px 34px rgba(20, 60, 40, 0.16);
-            --fuente-titulo: "Poppins", "Segoe UI", Arial, sans-serif;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: "Inter", "Segoe UI", Arial, sans-serif;
-            color: var(--texto);
-            background: var(--verde-claro);
-        }
-        a { color: inherit; }
+{% extends "base_portal.html" %}
 
-        /* ===== Barra de navegación ===== */
-        nav.principal {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 12px 28px;
-            background: #fff;
-            border-bottom: 1px solid var(--borde);
-            box-shadow: var(--sombra);
-        }
-        .marca {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            flex-shrink: 0;
-        }
-        .marca .logo {
-            width: 42px;
-            height: 42px;
-            flex-shrink: 0;
-        }
-        .marca .marca-texto strong {
-            display: block;
-            font-family: var(--fuente-titulo);
-            font-size: 0.98rem;
-            font-weight: 700;
-            color: var(--verde-oscuro);
-            line-height: 1.2;
-        }
-        .marca .marca-texto small {
-            display: block;
-            font-size: 0.72rem;
-            color: var(--texto-suave);
-            letter-spacing: 0.02em;
-        }
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        .nav-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 0.86rem;
-            font-weight: 600;
-            text-decoration: none;
-            color: var(--texto-suave);
-            transition: background 0.15s, color 0.15s;
-        }
-        .nav-link:hover {
-            background: var(--verde-claro);
-            color: var(--verde-oscuro);
-        }
-        .nav-link.activo {
-            background: var(--verde-claro);
-            color: var(--verde-oscuro);
-        }
-        .nav-cuenta {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-        .nav-cuenta a, .nav-cuenta button {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-decoration: none;
-            padding: 9px 16px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-        .btn-linea {
-            color: var(--verde-oscuro);
-            background: transparent;
-            border: 1.5px solid var(--verde-oscuro) !important;
-        }
-        .btn-lleno {
-            color: #fff;
-            background: var(--verde-oscuro);
-        }
-        .btn-lleno:hover, .btn-linea:hover {
-            opacity: 0.85;
-        }
-        .form-salir-nav {
-            margin: 0;
-            display: inline-block;
-        }
+{% block titulo %}Mapa Recreativo de La Maná{% endblock %}
 
+{% block estilos_extra %}
         /* ===== Hero ===== */
         .hero {
             position: relative;
@@ -454,14 +326,6 @@
             line-height: 1.45;
         }
 
-        footer {
-            text-align: center;
-            padding: 30px 20px 40px;
-            font-size: 0.78rem;
-            color: var(--texto-suave);
-        }
-
-        /* ===== Responsive ===== */
         @media (max-width: 900px) {
             .hero { grid-template-columns: 1fr; min-height: 0; }
             .hero-contenido { padding: 44px 20px 40px; max-width: none; }
@@ -470,51 +334,13 @@
             .features-caja { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 640px) {
-            nav.principal { flex-wrap: wrap; padding: 12px 16px; }
-            .nav-links { order: 3; width: 100%; justify-content: flex-start; overflow-x: auto; }
             .hero h1 { font-size: 1.65rem; }
             .stats { grid-template-columns: 1fr 1fr; }
             .features-caja { grid-template-columns: 1fr; }
         }
-    </style>
-</head>
-<body>
-    <nav class="principal">
-        <a class="marca" href="{% url 'lugares:inicio' %}">
-            <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="24" cy="24" r="24" fill="#eaf6ee"/>
-                <path d="M8 30 L18 14 L26 26 L31 18 L40 30 Z" fill="#2e8b57"/>
-                <circle cx="16" cy="15" r="5" fill="#1f6e43"/>
-                <rect x="15" y="18" width="2" height="7" fill="#7a5c2e"/>
-                <path d="M4 34 Q16 28 24 34 T44 34" stroke="#2fa0c9" stroke-width="3" fill="none" stroke-linecap="round"/>
-            </svg>
-            <span class="marca-texto">
-                <strong>Mapa Recreativo<br>de La Maná</strong>
-                <small>Conoce · Disfruta · Cuida</small>
-            </span>
-        </a>
-        <div class="nav-links">
-            <a class="nav-link activo" href="{% url 'lugares:inicio' %}">🏠 Inicio</a>
-            <a class="nav-link" href="{% url 'lugares:mapa' %}">🗺️ Mapa</a>
-            <a class="nav-link" href="{% url 'lugares:mapa' %}">📍 Lugares</a>
-            <a class="nav-link" href="{% url 'lugares:mapa' %}">🔀 Rutas</a>
-            <a class="nav-link" href="{% url 'lugares:mapa' %}">🍃 Recursos</a>
-            <a class="nav-link" href="#acerca">ℹ️ Acerca de</a>
-        </div>
-        <div class="nav-cuenta">
-            {% if user.is_authenticated %}
-                <a class="btn-linea" href="{% url 'usuarios:mis_sugerencias' %}">👤 {{ user.username }}</a>
-                <form action="{% url 'usuarios:logout' %}" method="post" class="form-salir-nav">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-linea">Salir</button>
-                </form>
-            {% else %}
-                <a class="btn-linea" href="{% url 'usuarios:login' %}">👤 Iniciar sesión</a>
-                <a class="btn-lleno" href="{% url 'usuarios:registro' %}">➕ Registrarse</a>
-            {% endif %}
-        </div>
-    </nav>
+{% endblock %}
 
+{% block contenido %}
     <section class="hero">
         <div class="hero-contenido">
             <div class="hero-iconos"><span>🌳</span><span>🏞️</span><span>💧</span></div>
@@ -603,11 +429,9 @@
             </div>
         </div>
     </section>
+{% endblock %}
 
-    <footer>
-        Cantón La Maná · Proyecto de mapa web interactivo con herramientas geoespaciales
-    </footer>
-
+{% block script_extra %}
     <script>
         const scrollEl = document.getElementById('categorias-scroll');
         const botonSiguiente = document.getElementById('categorias-siguiente');
@@ -617,5 +441,4 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

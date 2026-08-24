@@ -1,0 +1,140 @@
+{% extends "base_portal.html" %}
+
+{% block titulo %}Lugares — Mapa Recreativo de La Maná{% endblock %}
+
+{% block estilos_extra %}
+        main {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+        .encabezado-pagina {
+            margin-bottom: 22px;
+        }
+        .encabezado-pagina h1 {
+            font-family: var(--fuente-titulo);
+            font-size: 1.5rem;
+            margin: 0 0 6px;
+            color: var(--texto);
+        }
+        .encabezado-pagina p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--texto-suave);
+        }
+        .filtro-categorias {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 20px 0 26px;
+        }
+        .filtro-categorias a {
+            display: inline-block;
+            padding: 7px 14px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            background: #fff;
+            border: 1px solid var(--borde);
+            color: var(--texto-suave);
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .filtro-categorias a:hover {
+            border-color: var(--verde);
+        }
+        .filtro-categorias a.activa {
+            background: var(--verde-oscuro);
+            border-color: var(--verde-oscuro);
+            color: #fff;
+        }
+        .grid-lugares {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 18px;
+        }
+        .lugar-card {
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-radius: 14px;
+            padding: 18px;
+            text-decoration: none;
+            color: var(--texto);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .lugar-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--sombra-fuerte);
+        }
+        .lugar-card .categoria {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--verde-oscuro);
+            background: var(--verde-claro);
+            padding: 3px 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .lugar-card h2 {
+            font-family: var(--fuente-titulo);
+            font-size: 1.02rem;
+            margin: 0 0 8px;
+        }
+        .lugar-card p {
+            font-size: 0.82rem;
+            color: var(--texto-suave);
+            line-height: 1.45;
+            margin: 0 0 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .lugar-card .pie {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--verde-oscuro);
+        }
+        .vacio {
+            font-size: 0.9rem;
+            color: var(--texto-suave);
+            padding: 30px 0;
+        }
+{% endblock %}
+
+{% block contenido %}
+    <main>
+        <div class="encabezado-pagina">
+            <h1>📍 Lugares recreativos</h1>
+            <p>Todos los centros recreativos, ríos, cascadas y balnearios del cantón La Maná.</p>
+        </div>
+
+        <div class="filtro-categorias">
+            <a href="{% url 'lugares:lista' %}" class="{% if not categoria_activa %}activa{% endif %}">Todas</a>
+            {% for cat in categorias %}
+                <a href="?categoria={{ cat.nombre|urlencode }}" class="{% if categoria_activa == cat.nombre %}activa{% endif %}">{{ cat.nombre }}</a>
+            {% endfor %}
+        </div>
+
+        {% if lugares %}
+            <div class="grid-lugares">
+                {% for lugar in lugares %}
+                    <a class="lugar-card" href="{% url 'lugares:detalle' lugar.id %}">
+                        <span class="categoria">{{ lugar.categoria.nombre }}</span>
+                        <h2>{{ lugar.nombre }}</h2>
+                        <p>{{ lugar.descripcion }}</p>
+                        <div class="pie">
+                            <span>{% if lugar.costo_entrada > 0 %}${{ lugar.costo_entrada }}{% else %}Gratis{% endif %}</span>
+                            <span>Ver detalle →</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="vacio">No hay lugares en esta categoría todavía.</p>
+        {% endif %}
+    </main>
+{% endblock %}
