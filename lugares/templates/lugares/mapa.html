@@ -10,21 +10,29 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
           integrity="sha256-cu3EeyAbdh7FZ58X4+oQz2g30Tw/U+3Utqmr1ETODqQ=" crossorigin="" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --verde-oscuro: #1f6e43;
             --verde: #2e8b57;
             --verde-claro: #eaf6ee;
+            --verde-suave: #d7ecdd;
             --texto: #1a2b22;
+            --texto-suave: #5c6e64;
             --borde: #d5e6da;
+            --sombra: 0 2px 10px rgba(20, 60, 40, 0.08);
+            --sombra-fuerte: 0 6px 24px rgba(20, 60, 40, 0.18);
+            --fuente-titulo: "Poppins", "Segoe UI", Arial, sans-serif;
         }
         * { box-sizing: border-box; }
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
             color: var(--texto);
         }
         .app {
@@ -33,8 +41,9 @@
             width: 100%;
         }
         #sidebar {
-            width: 320px;
+            width: 340px;
             min-width: 280px;
+            flex-shrink: 0;
             background: var(--verde-claro);
             border-right: 1px solid var(--borde);
             display: flex;
@@ -42,18 +51,20 @@
             overflow: hidden;
         }
         #sidebar header {
-            background: var(--verde-oscuro);
+            background: linear-gradient(155deg, var(--verde-oscuro), #175636);
             color: #fff;
-            padding: 16px 18px;
+            padding: 18px 20px;
         }
         #sidebar header h1 {
             margin: 0 0 4px;
-            font-size: 1.1rem;
+            font-family: var(--fuente-titulo);
+            font-size: 1.15rem;
+            font-weight: 700;
         }
         #sidebar header p {
-            margin: 0 0 8px;
+            margin: 0 0 10px;
             font-size: 0.8rem;
-            opacity: 0.9;
+            opacity: 0.85;
         }
         .acciones-header {
             display: flex;
@@ -62,16 +73,17 @@
         }
         #link-sugerir, .link-cuenta {
             display: inline-block;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             color: #fff;
-            background: rgba(255,255,255,0.18);
-            padding: 5px 10px;
+            background: rgba(255,255,255,0.16);
+            padding: 6px 11px;
             border-radius: 14px;
             text-decoration: none;
             border: none;
             font-family: inherit;
             cursor: pointer;
+            transition: background 0.15s;
         }
         #link-sugerir:hover, .link-cuenta:hover {
             background: rgba(255,255,255,0.3);
@@ -80,95 +92,126 @@
             margin: 0;
             display: inline-block;
         }
+        .toggle-sidebar-movil {
+            display: none;
+        }
         #filtros {
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--borde);
+            background: #fff;
         }
         #filtros label {
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             font-weight: 600;
+            color: var(--texto-suave);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
             display: block;
             margin-bottom: 6px;
         }
         #buscador {
             width: 100%;
-            padding: 8px 10px;
+            padding: 9px 12px;
             border: 1px solid var(--borde);
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.9rem;
-            margin-bottom: 10px;
+            font-family: inherit;
+            margin-bottom: 12px;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         #categoria-select {
             width: 100%;
-            padding: 8px 10px;
+            padding: 9px 12px;
             border: 1px solid var(--borde);
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.9rem;
+            font-family: inherit;
             background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        #buscador:focus, #categoria-select:focus {
+            outline: none;
+            border-color: var(--verde);
+            box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.15);
         }
         .capa-toggle {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-top: 6px;
+            gap: 8px;
+            margin-top: 8px;
         }
         .capa-toggle label {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             font-size: 0.82rem;
-            font-weight: 400;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: normal;
+            color: var(--texto);
             margin: 0;
             cursor: pointer;
+        }
+        .capa-toggle input {
+            accent-color: var(--verde-oscuro);
+            width: 15px;
+            height: 15px;
         }
         #lista {
             flex: 1;
             overflow-y: auto;
-            padding: 4px 0;
+            padding: 6px 0;
         }
         .lugar-item {
-            padding: 10px 16px;
+            padding: 11px 18px;
             border-bottom: 1px solid var(--borde);
+            border-left: 3px solid transparent;
             cursor: pointer;
-            transition: background 0.15s;
+            transition: background 0.15s, border-color 0.15s;
         }
         .lugar-item:hover, .lugar-item.activo {
-            background: #d7ecdd;
+            background: var(--verde-suave);
+            border-left-color: var(--verde-oscuro);
         }
         .lugar-item .nombre {
             font-weight: 600;
             font-size: 0.9rem;
         }
         .lugar-item .categoria {
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             color: var(--verde-oscuro);
+            margin-top: 2px;
         }
         #contador {
-            padding: 8px 16px;
-            font-size: 0.78rem;
-            color: #4a5c52;
+            padding: 9px 18px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            color: var(--texto-suave);
             border-top: 1px solid var(--borde);
             background: #fff;
         }
         #map {
             flex: 1;
+            min-width: 0;
             height: 100%;
             position: relative;
         }
         .popup-lugar h3 {
             margin: 0 0 6px;
+            font-family: var(--fuente-titulo);
             font-size: 1rem;
             color: var(--verde-oscuro);
         }
         .popup-lugar img {
             width: 100%;
             max-width: 220px;
-            border-radius: 6px;
-            margin-bottom: 6px;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
         .popup-lugar p {
             margin: 3px 0;
             font-size: 0.85rem;
+            line-height: 1.4;
         }
         .popup-lugar .etiqueta {
             font-weight: 600;
@@ -177,35 +220,40 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin-top: 8px;
-            padding: 7px 12px;
+            margin-top: 10px;
+            padding: 8px 14px;
             border: none;
             border-radius: 20px;
             background: #4285F4;
             color: #fff;
             font-size: 0.82rem;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
+            transition: background 0.15s, box-shadow 0.15s;
         }
         .btn-como-llegar:hover {
             background: #3367d6;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.35);
         }
 
         /* --- Botón "Mi ubicación" estilo Google Maps --- */
         .boton-ubicacion {
             background: #fff;
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             cursor: pointer;
-            border-radius: 6px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            border-radius: 8px;
+            box-shadow: var(--sombra-fuerte);
+            transition: background 0.15s, transform 0.1s;
         }
         .boton-ubicacion:hover {
-            background: #f2f2f2;
+            background: #f4f4f4;
+            transform: scale(1.04);
         }
 
         /* --- Barra de ruta activa --- */
@@ -218,7 +266,7 @@
             z-index: 1000;
             background: #fff;
             border-radius: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            box-shadow: var(--sombra-fuerte);
             padding: 8px 10px 8px 16px;
             align-items: center;
             gap: 12px;
@@ -238,6 +286,7 @@
             cursor: pointer;
             font-size: 0.9rem;
             line-height: 1;
+            transition: background 0.15s;
         }
         #boton-cancelar-ruta:hover {
             background: #ddd;
@@ -246,19 +295,49 @@
         /* --- Panel de indicaciones (Leaflet Routing Machine) --- */
         .leaflet-routing-container {
             background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-            padding: 10px;
+            border-radius: 12px;
+            box-shadow: var(--sombra-fuerte);
+            padding: 12px;
             max-height: 70vh;
             font-family: inherit;
         }
         .leaflet-routing-alt h2, .leaflet-routing-alt h3 {
+            font-family: var(--fuente-titulo);
             color: var(--verde-oscuro);
         }
         @media (max-width: 720px) {
             .app { flex-direction: column; }
-            #sidebar { width: 100%; height: 45%; }
-            #map { height: 55%; }
+            #sidebar {
+                width: 100%;
+                max-height: 46vh;
+                transition: max-height 0.25s ease;
+            }
+            #sidebar.colapsado {
+                max-height: 128px;
+            }
+            #sidebar.colapsado #filtros,
+            #sidebar.colapsado #lista,
+            #sidebar.colapsado #contador {
+                display: none;
+            }
+            .toggle-sidebar-movil {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                width: 100%;
+                margin-top: 10px;
+                padding: 8px 12px;
+                border: none;
+                border-radius: 14px;
+                background: rgba(255,255,255,0.18);
+                color: #fff;
+                font-size: 0.8rem;
+                font-weight: 600;
+                font-family: inherit;
+                cursor: pointer;
+            }
+            #map { flex: 1; min-height: 0; }
             .leaflet-routing-container { max-width: 260px; }
         }
     </style>
@@ -283,6 +362,9 @@
                         <a class="link-cuenta" href="{% url 'usuarios:registro' %}">Registrarse</a>
                     {% endif %}
                 </div>
+                <button type="button" id="toggle-sidebar" class="toggle-sidebar-movil" aria-expanded="true">
+                    <span class="icono-toggle">▾</span> Ver / ocultar lista
+                </button>
             </header>
             <div id="filtros">
                 <label for="buscador">Buscar por nombre</label>
@@ -598,6 +680,28 @@
             const destino = [parseFloat(boton.dataset.lat), parseFloat(boton.dataset.lng)];
             iniciarRutaHacia(destino, boton.dataset.nombre);
         });
+
+        // ==============================
+        // 📱 Colapsar la lista en móvil (más pantalla para el mapa)
+        // ==============================
+        const sidebarEl = document.getElementById('sidebar');
+        const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+        const iconoToggleEl = toggleSidebarBtn.querySelector('.icono-toggle');
+
+        function fijarEstadoSidebar(colapsado) {
+            sidebarEl.classList.toggle('colapsado', colapsado);
+            toggleSidebarBtn.setAttribute('aria-expanded', String(!colapsado));
+            iconoToggleEl.textContent = colapsado ? '▸' : '▾';
+        }
+
+        toggleSidebarBtn.addEventListener('click', () => {
+            fijarEstadoSidebar(!sidebarEl.classList.contains('colapsado'));
+        });
+
+        // En pantallas angostas arranca colapsada para priorizar el mapa.
+        if (window.matchMedia('(max-width: 720px)').matches) {
+            fijarEstadoSidebar(true);
+        }
     </script>
 </body>
 </html>
