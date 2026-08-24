@@ -706,12 +706,29 @@
         let siguiendoUbicacion = false;
         let botonUbicacionEl = null;
 
-        const iconoUbicacion = L.divIcon({
-            className: '',
-            html: '<div style="width:16px;height:16px;border-radius:50%;background:#4285F4;border:3px solid #fff;box-shadow:0 0 4px rgba(0,0,0,0.5);"></div>',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-        });
+        // Ícono estilo Google Maps: punto azul + "cono" de rumbo cuando el GPS
+        // reporta hacia dónde te estás moviendo (coords.heading). Sin rumbo
+        // disponible (parado, o el navegador no lo entrega) se ve solo el punto.
+        function construirIconoUbicacion(rumbo) {
+            const tieneRumbo = typeof rumbo === 'number' && !isNaN(rumbo);
+            const cono = tieneRumbo ? `
+                <div style="position:absolute; top:-22px; left:-22px; width:60px; height:60px;
+                    border-radius:50%; pointer-events:none;
+                    background: conic-gradient(from ${rumbo - 30}deg, rgba(66,133,244,0.4) 0deg 60deg, transparent 60deg 360deg);">
+                </div>` : '';
+            return L.divIcon({
+                className: '',
+                html: `
+                    <div style="position:relative; width:16px; height:16px;">
+                        ${cono}
+                        <div style="position:relative; width:16px; height:16px; border-radius:50%;
+                            background:#4285F4; border:3px solid #fff; box-shadow:0 0 4px rgba(0,0,0,0.5);"></div>
+                    </div>
+                `,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+            });
+        }
 
         function fijarSeguimiento(activo) {
             siguiendoUbicacion = activo;
@@ -723,10 +740,10 @@
             }
         }
 
-        function actualizarUbicacion(lat, lng, precision) {
+        function actualizarUbicacion(lat, lng, precision, rumbo) {
             miUbicacion = [lat, lng];
             if (!marcadorUbicacion) {
-                marcadorUbicacion = L.marker(miUbicacion, { icon: iconoUbicacion, zIndexOffset: 1000 })
+                marcadorUbicacion = L.marker(miUbicacion, { icon: construirIconoUbicacion(rumbo), zIndexOffset: 1000 })
                     .bindPopup('📍 Estás aquí')
                     .addTo(map);
                 circuloPrecision = L.circle(miUbicacion, {
@@ -734,6 +751,7 @@
                 }).addTo(map);
             } else {
                 marcadorUbicacion.setLatLng(miUbicacion);
+                marcadorUbicacion.setIcon(construirIconoUbicacion(rumbo));
                 circuloPrecision.setLatLng(miUbicacion);
                 circuloPrecision.setRadius(precision);
             }
@@ -751,7 +769,7 @@
             }
             if (watchId === null) {
                 watchId = navigator.geolocation.watchPosition(
-                    (pos) => actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+                    (pos) => actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, pos.coords.heading),
                     (err) => alert('No se pudo obtener tu ubicación: ' + err.message),
                     { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
                 );
@@ -820,7 +838,7 @@
             }
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+                    actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, pos.coords.heading);
                     crearRuta(destino, nombreDestino);
                     if (watchId === null) { activarMiUbicacion(false); }
                 },
