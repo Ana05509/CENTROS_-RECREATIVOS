@@ -1,0 +1,39 @@
+{% load i18n %}
+{% with total=lugares_pendientes|add:eventos_pendientes|add:multimedia_pendientes %}
+<div class="module" id="panel-pendientes-module" style="margin-bottom: 20px;">
+    <table>
+        <caption>
+            <a href="#" style="color:#fff">📋 Pendientes por revisar {% if total %}({{ total }}){% endif %}</a>
+        </caption>
+        <tbody>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:lugares_lugar_changelist' %}?aprobado__exact=0">📍 Lugares sugeridos</a>
+                </th>
+                <td style="text-align: right; {% if lugares_pendientes %}color:#c0392b; font-weight:700;{% endif %}">
+                    {{ lugares_pendientes }}
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:lugares_evento_changelist' %}?aprobado__exact=0">📅 Eventos sugeridos</a>
+                </th>
+                <td style="text-align: right; {% if eventos_pendientes %}color:#c0392b; font-weight:700;{% endif %}">
+                    {{ eventos_pendientes }}
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:lugares_multimedia_changelist' %}?aprobado__exact=0">📷 Fotos y videos sugeridos</a>
+                </th>
+                <td style="text-align: right; {% if multimedia_pendientes %}color:#c0392b; font-weight:700;{% endif %}">
+                    {{ multimedia_pendientes }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    {% if not total %}
+        <p class="help" style="padding: 8px 12px;">✅ No hay nada pendiente de revisión.</p>
+    {% endif %}
+</div>
+{% endwith %}
