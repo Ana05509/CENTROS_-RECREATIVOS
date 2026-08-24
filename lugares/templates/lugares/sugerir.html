@@ -74,6 +74,11 @@
                     {{ lugar_form.direccion }}
                     {{ lugar_form.direccion.errors }}
                 </div>
+                <div class="campo">
+                    <label for="{{ lugar_form.parroquia.id_for_label }}">Parroquia (opcional)</label>
+                    {{ lugar_form.parroquia }}
+                    {{ lugar_form.parroquia.errors }}
+                </div>
                 <div class="fila-doble">
                     <div class="campo">
                         <label for="{{ lugar_form.latitud.id_for_label }}">Latitud</label>

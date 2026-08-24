@@ -15,9 +15,9 @@ def marcar_no_aprobado(modeladmin, request, queryset):
 
 @admin.register(Lugar)
 class LugarAdmin(admin.ModelAdmin):
-    list_display = ("nombre", "categoria", "aprobado", "creado_por", "fecha_creacion")
-    list_filter = ("aprobado", "categoria")
-    search_fields = ("nombre", "direccion")
+    list_display = ("nombre", "categoria", "parroquia", "aprobado", "creado_por", "fecha_creacion")
+    list_filter = ("aprobado", "categoria", "parroquia")
+    search_fields = ("nombre", "direccion", "parroquia")
     actions = [marcar_aprobado, marcar_no_aprobado]
 
 

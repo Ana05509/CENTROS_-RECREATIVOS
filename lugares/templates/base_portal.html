@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {% block head_extra %}{% endblock %}
     <style>
         :root {
             --verde-oscuro: #1f6e43;
@@ -94,6 +95,16 @@
             background: var(--verde-claro);
             color: var(--verde-oscuro);
         }
+        #clima-widget {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--texto-suave);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
         .nav-cuenta {
             display: flex;
             align-items: center;
@@ -169,6 +180,7 @@
             <a class="nav-link {% if nav_activo == 'recursos' %}activo{% endif %}" href="{% url 'mapas:lista' %}">🍃 Recursos</a>
             <a class="nav-link" href="{% url 'lugares:inicio' %}#acerca">ℹ️ Acerca de</a>
         </div>
+        <span id="clima-widget" title="Clima en La Maná">⏳</span>
         <div class="nav-cuenta">
             {% if user.is_authenticated %}
                 <a class="btn-linea" href="{% url 'usuarios:mis_sugerencias' %}">👤 {{ user.username }}</a>
@@ -182,6 +194,32 @@
             {% endif %}
         </div>
     </nav>
+
+    <script>
+        // Clima real de La Maná vía Open-Meteo (gratis, sin API key).
+        (function () {
+            const el = document.getElementById('clima-widget');
+            if (!el) return;
+
+            const ICONO_POR_CODIGO = {
+                0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+                45: '🌫️', 48: '🌫️',
+                51: '🌦️', 53: '🌦️', 55: '🌦️',
+                61: '🌧️', 63: '🌧️', 65: '🌧️',
+                80: '🌦️', 81: '🌧️', 82: '⛈️',
+                95: '⛈️', 96: '⛈️', 99: '⛈️',
+            };
+
+            fetch('https://api.open-meteo.com/v1/forecast?latitude=-0.9431&longitude=-79.2312&current=temperature_2m,weather_code&timezone=auto')
+                .then((resp) => resp.ok ? resp.json() : Promise.reject())
+                .then((datos) => {
+                    const actual = datos.current;
+                    const icono = ICONO_POR_CODIGO[actual.weather_code] || '🌡️';
+                    el.textContent = `${icono} ${Math.round(actual.temperature_2m)}°C`;
+                })
+                .catch(() => { el.textContent = '🌡️ Clima no disponible'; });
+        })();
+    </script>
 
     {% block contenido %}{% endblock %}
 

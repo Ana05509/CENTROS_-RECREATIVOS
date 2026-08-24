@@ -7,11 +7,12 @@ class SugerenciaLugarForm(forms.ModelForm):
     class Meta:
         model = Lugar
         fields = [
-            "nombre", "categoria", "descripcion", "direccion",
+            "nombre", "categoria", "descripcion", "direccion", "parroquia",
             "latitud", "longitud", "horario", "costo_entrada", "imagen",
         ]
         widgets = {
             "descripcion": forms.Textarea(attrs={"rows": 3}),
+            "parroquia": forms.TextInput(attrs={"placeholder": "Ej. La Maná, Guasaganda, Pucayacu..."}),
             "latitud": forms.NumberInput(attrs={"step": "any", "placeholder": "Ej. -0.9431"}),
             "longitud": forms.NumberInput(attrs={"step": "any", "placeholder": "Ej. -79.2312"}),
             "horario": forms.TextInput(attrs={"placeholder": "Ej. 08:00 - 18:00"}),

@@ -2,7 +2,7 @@ import json
 
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -121,6 +121,7 @@ def mapa(request):
             "horario": lugar.horario,
             "costo_entrada": str(lugar.costo_entrada),
             "categoria": lugar.categoria.nombre,
+            "parroquia": lugar.parroquia,
             "imagen": lugar.imagen.url if lugar.imagen else None,
             "detalle_url": reverse("lugares:detalle", args=[lugar.id]),
             "multimedia_count": lugar.multimedia.filter(aprobado=True).count(),
@@ -158,13 +159,49 @@ def mapa(request):
 
     categorias = sorted({lugar.categoria.nombre for lugar in lugares})
 
+    # "Lugares destacados": una pequeña muestra mixta (lugares, recursos
+    # naturales y rutas reales) para el carrusel flotante del mapa.
+    destacados = []
+    for lugar in lugares[:3]:
+        destacados.append({
+            "nombre": lugar.nombre,
+            "etiqueta": "Recreativo",
+            "color": "azul",
+            "url": f"{reverse('lugares:mapa')}?lugar={lugar.id}",
+        })
+    for punto in PuntoInteres.objects.filter(tipo="recurso_natural")[:2]:
+        destacados.append({
+            "nombre": punto.nombre,
+            "etiqueta": "Recurso natural",
+            "color": "verde",
+            "url": f"{reverse('lugares:mapa')}?punto={punto.id}",
+        })
+    for ruta in Ruta.objects.select_related("lugar")[:2]:
+        destacados.append({
+            "nombre": ruta.nombre,
+            "etiqueta": "Ruta de acceso",
+            "color": "morado",
+            "url": f"{reverse('lugares:mapa')}?ruta={ruta.id}",
+        })
+
+    parroquias = sorted({lugar.parroquia for lugar in lugares if lugar.parroquia})
+
+    ultima_actualizacion = lugares.aggregate(fecha=Max("fecha_creacion"))["fecha"]
+
     context = {
         "lugares_json": json.dumps(lugares_json, cls=DjangoJSONEncoder),
         "puntos_json": json.dumps(puntos_json, cls=DjangoJSONEncoder),
         "rutas_json": json.dumps(rutas_json, cls=DjangoJSONEncoder),
         "categorias": categorias,
+        "parroquias": parroquias,
         "total_lugares": len(lugares_json),
+        "total_puntos": len(puntos_json),
+        "total_rutas": len(rutas_json),
+        "total_categorias": Categoria.objects.count(),
+        "ultima_actualizacion": ultima_actualizacion,
+        "destacados": destacados,
         "centro": CENTRO_LA_MANA,
+        "nav_activo": "mapa",
     }
     return render(request, "lugares/mapa.html", context)
 

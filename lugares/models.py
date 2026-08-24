@@ -18,6 +18,12 @@ class Lugar(models.Model):
     descripcion = models.TextField()
     direccion = models.CharField(max_length=255)
 
+    parroquia = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Ejemplo: La Maná, Guasaganda, Pucayacu, El Carmen, El Triunfo",
+    )
+
     latitud = models.FloatField()
     longitud = models.FloatField()
 
