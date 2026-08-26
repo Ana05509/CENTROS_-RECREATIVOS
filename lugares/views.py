@@ -15,6 +15,19 @@ from .models import Categoria, Lugar, TipoMultimedia
 # Centro aproximado del cantón La Maná, usado cuando no hay lugares que centrar.
 CENTRO_LA_MANA = {"lat": -0.9431, "lng": -79.2312}
 
+
+def json_seguro_para_script(datos):
+    """json.dumps() normal, pero además escapa '<', '>' y '&'.
+
+    Sin esto, un Lugar con "</script><script>...</script>" en su nombre o
+    descripción (posible desde el formulario público /sugerir/) rompería
+    el bloque <script> de mapa.html y ejecutaría código arbitrario en el
+    navegador de cualquiera que visite el mapa, sin necesidad de que nadie
+    haga clic en nada. Es el mismo escape que usa el tag interno de
+    Django `json_script` para poder incrustar JSON dentro de HTML."""
+    texto = json.dumps(datos, cls=DjangoJSONEncoder)
+    return texto.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
 # Ícono y tema visual (para el degradado de la tarjeta) por categoría, usados
 # en la sección "Explora por categoría" del portal. Las categorías que no
 # aparecen aquí caen en el tema/ícono por defecto.
@@ -189,9 +202,9 @@ def mapa(request):
     ultima_actualizacion = lugares.aggregate(fecha=Max("fecha_creacion"))["fecha"]
 
     context = {
-        "lugares_json": json.dumps(lugares_json, cls=DjangoJSONEncoder),
-        "puntos_json": json.dumps(puntos_json, cls=DjangoJSONEncoder),
-        "rutas_json": json.dumps(rutas_json, cls=DjangoJSONEncoder),
+        "lugares_json": json_seguro_para_script(lugares_json),
+        "puntos_json": json_seguro_para_script(puntos_json),
+        "rutas_json": json_seguro_para_script(rutas_json),
         "categorias": categorias,
         "parroquias": parroquias,
         "total_lugares": len(lugares_json),

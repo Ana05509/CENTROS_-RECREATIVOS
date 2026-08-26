@@ -1026,21 +1026,34 @@
             }
         });
 
+        // Escapa HTML antes de insertar cualquier dato que venga de la base
+        // (nombre, descripción, etc.) en un popup. Sin esto, alguien podría
+        // sugerir un lugar con <script> o <img onerror=...> en el nombre y,
+        // si un admin lo aprueba sin fijarse, ese código correría en el
+        // navegador de cada visitante que abra el popup (XSS almacenado).
+        function escaparHTML(texto) {
+            const div = document.createElement('div');
+            div.textContent = texto ?? '';
+            return div.innerHTML;
+        }
+
         function popupHTML(lugar) {
-            const imagen = lugar.imagen ? `<img src="${lugar.imagen}" alt="${lugar.nombre}">` : '';
+            const imagen = lugar.imagen
+                ? `<img src="${escaparHTML(lugar.imagen)}" alt="${escaparHTML(lugar.nombre)}">`
+                : '';
             const costo = parseFloat(lugar.costo_entrada) > 0
                 ? `$${parseFloat(lugar.costo_entrada).toFixed(2)}`
                 : 'Gratis';
             return `
                 <div class="popup-lugar">
                     ${imagen}
-                    <h3>${lugar.nombre}</h3>
-                    <p><span class="etiqueta">Categoría:</span> ${lugar.categoria}</p>
-                    <p>${lugar.descripcion}</p>
-                    <p><span class="etiqueta">Dirección:</span> ${lugar.direccion}</p>
-                    ${lugar.horario ? `<p><span class="etiqueta">Horario:</span> ${lugar.horario}</p>` : ''}
+                    <h3>${escaparHTML(lugar.nombre)}</h3>
+                    <p><span class="etiqueta">Categoría:</span> ${escaparHTML(lugar.categoria)}</p>
+                    <p>${escaparHTML(lugar.descripcion)}</p>
+                    <p><span class="etiqueta">Dirección:</span> ${escaparHTML(lugar.direccion)}</p>
+                    ${lugar.horario ? `<p><span class="etiqueta">Horario:</span> ${escaparHTML(lugar.horario)}</p>` : ''}
                     <p><span class="etiqueta">Entrada:</span> ${costo}</p>
-                    <p><a class="link-galeria" href="${lugar.detalle_url}">📷 ${lugar.multimedia_count > 0 ? `Ver ${lugar.multimedia_count} foto(s)/video(s)` : 'Agregar fotos y videos'}</a></p>
+                    <p><a class="link-galeria" href="${escaparHTML(lugar.detalle_url)}">📷 ${lugar.multimedia_count > 0 ? `Ver ${lugar.multimedia_count} foto(s)/video(s)` : 'Agregar fotos y videos'}</a></p>
                     <button class="btn-como-llegar" data-id="${lugar.id}">🧭 Cómo llegar</button>
                 </div>
             `;
@@ -1058,9 +1071,9 @@
             const etiquetaTipo = punto.tipo === 'recurso_natural' ? 'Recurso natural' : 'Infraestructura';
             return `
                 <div class="popup-lugar">
-                    <h3>${punto.nombre}</h3>
-                    <p><span class="etiqueta">Tipo:</span> ${etiquetaTipo}${punto.subtipo ? ' · ' + punto.subtipo : ''}</p>
-                    ${punto.descripcion ? `<p>${punto.descripcion}</p>` : ''}
+                    <h3>${escaparHTML(punto.nombre)}</h3>
+                    <p><span class="etiqueta">Tipo:</span> ${etiquetaTipo}${punto.subtipo ? ' · ' + escaparHTML(punto.subtipo) : ''}</p>
+                    ${punto.descripcion ? `<p>${escaparHTML(punto.descripcion)}</p>` : ''}
                 </div>
             `;
         }
@@ -1077,13 +1090,13 @@
         function popupRuta(ruta) {
             return `
                 <div class="popup-lugar">
-                    <h3>${ruta.nombre}</h3>
-                    <p><span class="etiqueta">Hacia:</span> ${ruta.lugar}</p>
-                    <p><span class="etiqueta">Desde:</span> ${ruta.punto_partida}</p>
-                    ${ruta.descripcion ? `<p>${ruta.descripcion}</p>` : ''}
-                    <p><span class="etiqueta">Transporte:</span> ${ruta.tipo_transporte}</p>
+                    <h3>${escaparHTML(ruta.nombre)}</h3>
+                    <p><span class="etiqueta">Hacia:</span> ${escaparHTML(ruta.lugar)}</p>
+                    <p><span class="etiqueta">Desde:</span> ${escaparHTML(ruta.punto_partida)}</p>
+                    ${ruta.descripcion ? `<p>${escaparHTML(ruta.descripcion)}</p>` : ''}
+                    <p><span class="etiqueta">Transporte:</span> ${escaparHTML(ruta.tipo_transporte)}</p>
                     ${ruta.distancia_km ? `<p><span class="etiqueta">Distancia:</span> ${ruta.distancia_km} km</p>` : ''}
-                    ${ruta.tiempo_estimado ? `<p><span class="etiqueta">Tiempo estimado:</span> ${ruta.tiempo_estimado}</p>` : ''}
+                    ${ruta.tiempo_estimado ? `<p><span class="etiqueta">Tiempo estimado:</span> ${escaparHTML(ruta.tiempo_estimado)}</p>` : ''}
                 </div>
             `;
         }

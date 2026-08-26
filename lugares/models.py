@@ -2,7 +2,21 @@ import re
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
+
+# Extensiones permitidas para Multimedia.archivo y tamaño máximo. Sin esto,
+# el campo aceptaría CUALQUIER archivo (ejecutables, HTML, etc.) desde el
+# formulario público sin cuenta, y quedaría servido públicamente bajo el
+# dominio del sitio.
+EXTENSIONES_MULTIMEDIA_PERMITIDAS = ["jpg", "jpeg", "png", "gif", "webp", "mp4", "webm", "mov"]
+TAMANO_MAXIMO_MULTIMEDIA_MB = 25
+
+
+def validar_tamano_multimedia(archivo):
+    limite = TAMANO_MAXIMO_MULTIMEDIA_MB * 1024 * 1024
+    if archivo.size > limite:
+        raise ValidationError(f"El archivo no puede pesar más de {TAMANO_MAXIMO_MULTIMEDIA_MB} MB.")
 
 
 class Categoria(models.Model):
@@ -123,7 +137,14 @@ class Multimedia(models.Model):
         upload_to="lugares/multimedia/",
         blank=True,
         null=True,
-        help_text="Foto, o un archivo de video si no vas a usar un link de YouTube.",
+        validators=[
+            FileExtensionValidator(allowed_extensions=EXTENSIONES_MULTIMEDIA_PERMITIDAS),
+            validar_tamano_multimedia,
+        ],
+        help_text=(
+            "Foto (jpg, png, gif, webp) o video (mp4, webm, mov), máx. "
+            f"{TAMANO_MAXIMO_MULTIMEDIA_MB} MB. O usa un link de YouTube."
+        ),
     )
     url_video = models.URLField(
         blank=True,

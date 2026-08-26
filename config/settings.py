@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-u_8+284!w(cq2jh8p-ldac90d8kzgtd-w84krc6#25@iffj4)b"
+# Este valor por defecto ya quedó expuesto en el historial de git (no es
+# secreto). Sirve para que el entorno local siga funcionando igual sin
+# configurar nada, pero en producción hay que definir la variable de
+# entorno DJANGO_SECRET_KEY con un valor nuevo (por ejemplo, generado con
+# `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`)
+# y no reutilizar este.
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-u_8+284!w(cq2jh8p-ldac90d8kzgtd-w84krc6#25@iffj4)b",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# En producción, definir la variable de entorno DJANGO_DEBUG=False.
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h]
 
 
 # Application definition
