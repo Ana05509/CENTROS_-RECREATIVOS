@@ -3,7 +3,19 @@
 {% block titulo %}Sugerir un lugar o evento — Mapa Recreativo de La Maná{% endblock %}
 {% block encabezado_titulo %}➕ Sugerir un lugar o evento{% endblock %}
 
+{% block head_extra %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+{% endblock %}
+
 {% block estilos_extra %}
+        #mapa-marcar {
+            height: 220px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--borde);
+            margin-bottom: 4px;
+        }
         .tabs {
             display: flex;
             gap: 8px;
@@ -79,6 +91,11 @@
                     {{ lugar_form.parroquia }}
                     {{ lugar_form.parroquia.errors }}
                 </div>
+                <div class="campo">
+                    <label>Marca el lugar en el mapa</label>
+                    <div id="mapa-marcar"></div>
+                    <p class="ayuda">Toca el mapa para ubicar el lugar exacto — las coordenadas de abajo se llenan solas. También puedes escribirlas a mano si ya las tienes.</p>
+                </div>
                 <div class="fila-doble">
                     <div class="campo">
                         <label for="{{ lugar_form.latitud.id_for_label }}">Latitud</label>
@@ -91,7 +108,6 @@
                         {{ lugar_form.longitud.errors }}
                     </div>
                 </div>
-                <p class="ayuda">Tip: abre el lugar en Google Maps, mantén presionado el punto y copia las coordenadas que aparecen.</p>
                 <div class="fila-doble">
                     <div class="campo">
                         <label for="{{ lugar_form.horario.id_for_label }}">Horario (opcional)</label>
@@ -186,6 +202,8 @@
 {% endblock %}
 
 {% block script_extra %}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         const botones = document.querySelectorAll('.tab-btn');
         const formularios = {
@@ -194,11 +212,57 @@
             multimedia: document.getElementById('form-multimedia'),
         };
 
+        // ==============================
+        // 🗺️ Marcar el lugar haciendo clic en un mini-mapa, en vez de
+        // tener que copiar coordenadas manualmente desde Google Maps.
+        // ==============================
+        let mapaMarcar = null;
+        let marcadorLugar = null;
+
+        function inicializarMapaMarcar() {
+            if (mapaMarcar) return;
+
+            const latInput = document.getElementById('{{ lugar_form.latitud.id_for_label }}');
+            const lngInput = document.getElementById('{{ lugar_form.longitud.id_for_label }}');
+            const centroLaMana = [-0.9431, -79.2312];
+            const valorInicial = (latInput.value && lngInput.value)
+                ? [parseFloat(latInput.value), parseFloat(lngInput.value)]
+                : null;
+
+            mapaMarcar = L.map('mapa-marcar').setView(valorInicial || centroLaMana, valorInicial ? 15 : 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19,
+            }).addTo(mapaMarcar);
+
+            if (valorInicial) {
+                marcadorLugar = L.marker(valorInicial).addTo(mapaMarcar);
+            }
+
+            mapaMarcar.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                if (marcadorLugar) {
+                    marcadorLugar.setLatLng(e.latlng);
+                } else {
+                    marcadorLugar = L.marker(e.latlng).addTo(mapaMarcar);
+                }
+                latInput.value = lat.toFixed(6);
+                lngInput.value = lng.toFixed(6);
+            });
+        }
+
         function activarTipo(tipo) {
             botones.forEach((b) => b.classList.toggle('activo', b.dataset.tipo === tipo));
             Object.entries(formularios).forEach(([clave, form]) => {
                 form.classList.toggle('activo', clave === tipo);
             });
+            // El mini-mapa no se ve bien si se crea con el formulario oculto
+            // (display:none), así que se inicializa/recalcula recién al
+            // mostrar la pestaña "Nuevo lugar".
+            if (tipo === 'lugar') {
+                inicializarMapaMarcar();
+                setTimeout(() => { if (mapaMarcar) mapaMarcar.invalidateSize(); }, 50);
+            }
         }
 
         botones.forEach((b) => b.addEventListener('click', () => activarTipo(b.dataset.tipo)));
