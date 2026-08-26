@@ -1,0 +1,191 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .manual { max-width: 900px; }
+        .manual h2 {
+            margin-top: 30px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--primary, #6b9080);
+            color: var(--body-fg);
+        }
+        .manual h2:first-of-type { margin-top: 0; }
+        .manual h3 { margin-top: 18px; }
+        .manual .indice {
+            background: var(--darkened-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px 20px;
+        }
+        .manual .indice ul { margin: 0; }
+        .manual table { width: 100%; border-collapse: collapse; margin: 10px 0 20px; }
+        .manual table th, .manual table td {
+            text-align: left;
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--hairline-color);
+            font-size: 0.85rem;
+        }
+        .manual .aviso {
+            background: var(--message-warning-bg);
+            border-left: 4px solid #b5650f;
+            padding: 10px 14px;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+        .manual .ok {
+            background: var(--message-success-bg);
+            border-left: 4px solid var(--primary, #6b9080);
+            padding: 10px 14px;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+        .manual code {
+            background: var(--darkened-bg);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        .manual pre {
+            background: var(--darkened-bg);
+            padding: 10px 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="manual">
+
+    <p>Guía de referencia de todo lo que hace el sitio "Mapa Recreativo de La Maná" y cómo administrarlo desde acá.</p>
+
+    <div class="indice">
+        <strong>Contenido</strong>
+        <ul>
+            <li><a href="#moderacion">1. Moderar sugerencias del público</a></li>
+            <li><a href="#modelos">2. Qué es cada cosa (Lugares, Eventos, Fotos/Videos, Recursos, Rutas)</a></li>
+            <li><a href="#sitio-publico">3. Cómo se ve todo esto en el sitio público</a></li>
+            <li><a href="#mapa">4. El mapa interactivo (GPS, guía por voz, rutas)</a></li>
+            <li><a href="#comandos">5. Comandos de mantenimiento</a></li>
+            <li><a href="#cuentas">6. Cuentas de usuario</a></li>
+            <li><a href="#seguridad">7. Seguridad — lo que hay que saber</a></li>
+            <li><a href="#servicios">8. Servicios externos que usa el sitio (todos gratis, con matices)</a></li>
+        </ul>
+    </div>
+
+    <h2 id="moderacion">1. Moderar sugerencias del público</h2>
+    <p>
+        Cualquier visitante puede sugerir un <strong>lugar</strong>, un <strong>evento</strong> o una
+        <strong>foto/video</strong> desde <code>/sugerir/</code>, sin necesitar cuenta. Todo lo que llega por ahí
+        se guarda con <code>aprobado = No</code> y <strong>no aparece en el mapa ni en los listados públicos</strong>
+        hasta que un administrador lo revisa acá.
+    </p>
+    <h3>Para revisar lo pendiente</h3>
+    <p>
+        En el <a href="{% url 'admin:index' %}">inicio del admin</a> hay un panel "📋 Pendientes por revisar" con
+        el conteo real de Lugares, Eventos y Fotos/Videos sin aprobar, cada uno con link directo a la lista filtrada.
+    </p>
+    <h3>Para aprobar (o rechazar)</h3>
+    <p>
+        En las listas de Lugar, Evento y Multimedia, la columna <strong>aprobado</strong> es un checkbox editable
+        directamente ahí (marcás/desmarcás y tocás "Guardar" abajo de la tabla) — no hace falta entrar a cada
+        registro. También podés seleccionar varios con el checkbox de la izquierda y usar la acción
+        "Marcar seleccionados como aprobados" / "...como NO aprobados" del menú de acciones.
+    </p>
+    <div class="aviso">
+        <strong>⚠️ Antes de aprobar:</strong> date una vuelta rápida por el nombre y la descripción. No dejes pasar
+        contenido con etiquetas HTML raras, links sospechosos, o texto que claramente no es sobre un lugar real —
+        el sitio ya está protegido contra que ese tipo de contenido rompa la página (ver sección 7), pero sigue
+        siendo mejor no publicar spam o contenido de mala fe.
+    </div>
+
+    <h2 id="modelos">2. Qué es cada cosa</h2>
+    <table>
+        <tr><th>Modelo</th><th>Para qué sirve</th><th>Dónde se administra</th></tr>
+        <tr><td><strong>Categoría</strong></td><td>Agrupa lugares: Cascadas, Ríos, Balnearios, Miradores, etc.</td><td>Admin → Lugares → Categorías</td></tr>
+        <tr><td><strong>Lugar</strong></td><td>Un centro recreativo, río, cascada, balneario... Tiene nombre, descripción, dirección, parroquia (opcional), coordenadas, horario, costo de entrada, foto de portada.</td><td>Admin → Lugares → Lugares</td></tr>
+        <tr><td><strong>Evento</strong></td><td>Algo que pasa en una fecha en un Lugar existente (fecha de inicio/fin, imagen).</td><td>Admin → Lugares → Eventos</td></tr>
+        <tr><td><strong>Foto / video (Multimedia)</strong></td><td>Galería de un Lugar: varias fotos y videos por lugar (a diferencia de la foto de portada, que es una sola). Video como archivo o como link de YouTube.</td><td>Admin → Lugares → Fotos y videos</td></tr>
+        <tr><td><strong>Punto de interés</strong></td><td>Recursos naturales (ríos, bosques) e infraestructura (hospitales, puentes, vías) — no son "lugares recreativos", son referencia geográfica.</td><td>Admin → Mapas → Puntos de interés</td></tr>
+        <tr><td><strong>Ruta</strong></td><td>Ruta de acceso hacia un Lugar: punto de partida, tipo de transporte, distancia, tiempo, y el trazado (lista de coordenadas) que se dibuja en el mapa.</td><td>Admin → Rutas → Rutas</td></tr>
+    </table>
+    <p>
+        Fotos y videos permiten estos formatos: <code>{{ extensiones_multimedia }}</code>, máximo
+        <strong>{{ tamano_maximo_mb }} MB</strong> por archivo. Si alguien intenta subir otra cosa, el formulario
+        lo rechaza solo, con o sin tu supervisión.
+    </p>
+
+    <h2 id="sitio-publico">3. Cómo se ve todo esto en el sitio público</h2>
+    <table>
+        <tr><th>URL</th><th>Qué muestra</th></tr>
+        <tr><td><code>/</code></td><td>Portal de inicio: hero, estadísticas reales, categorías destacadas.</td></tr>
+        <tr><td><code>/mapa/</code></td><td>El mapa interactivo completo (ver sección 4).</td></tr>
+        <tr><td><code>/lugares/</code></td><td>Catálogo de todos los Lugares aprobados, filtrable por categoría.</td></tr>
+        <tr><td><code>/lugar/&lt;id&gt;/</code></td><td>Ficha de un lugar: descripción completa + galería de fotos/videos aprobados.</td></tr>
+        <tr><td><code>/rutas/</code></td><td>Listado de rutas de acceso, cada una con botón "Ver en el mapa".</td></tr>
+        <tr><td><code>/recursos/</code></td><td>Listado de recursos naturales e infraestructura.</td></tr>
+        <tr><td><code>/sugerir/</code></td><td>Formulario público (lugar / evento / foto-video).</td></tr>
+        <tr><td><code>/cuenta/registro/</code>, <code>/cuenta/login/</code></td><td>Cuentas de usuario del público (opcional, ver sección 6).</td></tr>
+    </table>
+    <div class="ok">
+        Solo lo que tiene <code>aprobado = Sí</code> aparece en cualquiera de estas páginas. Si algo no aparece
+        después de aprobarlo, revisá que también tenga coordenadas válidas (latitud/longitud).
+    </div>
+
+    <h2 id="mapa">4. El mapa interactivo</h2>
+    <ul>
+        <li><strong>Capas:</strong> Lugares, Recursos naturales/infraestructura y Rutas se pueden mostrar/ocultar por separado, desde el sidebar o los botones "Ver:" arriba del mapa.</li>
+        <li><strong>Agrupamiento (clustering):</strong> los marcadores de lugares se agrupan en burbujas numeradas cuando hay varios cerca; se separan solos al hacer zoom.</li>
+        <li><strong>📍 Mi ubicación:</strong> usa el GPS del dispositivo. Un toque centra el mapa; otro toque activa el modo "seguirme" (el mapa se mueve solo mientras caminás). Necesita HTTPS o <code>localhost</code> para actualizarse en vivo — no funciona bien probando desde el celular contra una IP de red local.</li>
+        <li><strong>🧭 Guía turístico:</strong> botón fijo que da la bienvenida en voz (usa el sintetizador de voz del navegador, sin costo). El botón "Cómo llegar" de cada lugar también hace hablar al guía con datos reales del lugar (categoría, horario, costo) y, apenas se calcula la ruta, la distancia y el tiempo reales.</li>
+        <li><strong>🔊 / 📋:</strong> silencian la voz o esconden el panel de indicaciones escritas, sin cancelar la ruta.</li>
+        <li><strong>Clima real</strong> en la barra de navegación (Open-Meteo, sin API key).</li>
+    </ul>
+
+    <h2 id="comandos">5. Comandos de mantenimiento</h2>
+    <p>Se corren desde una terminal, en la carpeta del proyecto, con el entorno virtual activado:</p>
+    <pre>python manage.py actualizar_trazados</pre>
+    <p>
+        Recalcula el trazado de cada Ruta para que siga calles reales (en vez de una línea recta entre 2-3 puntos),
+        usando el mismo servicio que el botón "Cómo llegar". Conviene correrlo de nuevo cada vez que se agregue o
+        edite una Ruta.
+    </p>
+    <pre>python manage.py changepassword &lt;usuario&gt;</pre>
+    <p>Para resetear la contraseña de cualquier usuario (incluido un admin) si se olvida.</p>
+
+    <h2 id="cuentas">6. Cuentas de usuario</h2>
+    <p>
+        El público puede registrarse (<code>/cuenta/registro/</code>) opcionalmente. No es obligatorio para sugerir
+        contenido, pero si el visitante inicia sesión antes, sus sugerencias quedan asociadas a su cuenta y puede
+        verlas (con su estado de aprobación) en <code>/cuenta/mis-sugerencias/</code>. Esto no cambia nada del
+        proceso de moderación acá en el admin.
+    </p>
+
+    <h2 id="seguridad">7. Seguridad — lo que hay que saber</h2>
+    <ul>
+        <li>Los datos de fotos/videos ya están validados por tipo de archivo y tamaño (ver sección 2) — no se puede
+            subir un ejecutable ni un archivo gigante desde el formulario público.</li>
+        <li>El contenido de texto (nombres, descripciones) que llega del público ya está protegido contra que
+            alguien intente inyectar código HTML/JavaScript en el mapa — pero seguí revisando el contenido antes
+            de aprobar, por buen criterio editorial, no solo por seguridad técnica.</li>
+        <li><code>SECRET_KEY</code> del sitio se lee de la variable de entorno <code>DJANGO_SECRET_KEY</code> si
+            existe. <strong>Antes de publicar el sitio en un servidor real</strong>, hay que generar una clave nueva
+            y definir esa variable — la que trae el proyecto por defecto ya quedó expuesta en el historial de git.</li>
+        <li><code>DJANGO_DEBUG=False</code> también debe definirse en producción (en desarrollo local se deja como
+            está).</li>
+    </ul>
+
+    <h2 id="servicios">8. Servicios externos que usa el sitio</h2>
+    <p>Todos gratis y sin necesidad de crear cuentas ni API keys, pero con matices reales:</p>
+    <table>
+        <tr><th>Servicio</th><th>Para qué</th><th>Nota</th></tr>
+        <tr><td>OpenStreetMap (tiles)</td><td>Mapa base</td><td>Gratis, pero pide uso liviano — no es para tráfico masivo sin auto-hospedar</td></tr>
+        <tr><td>OSRM demo</td><td>Calcular rutas reales por calles</td><td>Es un servidor de <em>demostración</em>, no garantizado para producción</td></tr>
+        <tr><td>Open-Meteo</td><td>Clima real en el nav</td><td>Gratis de verdad, sin registro</td></tr>
+        <tr><td>Web Speech API</td><td>Voz del guía turístico</td><td>Nativa del navegador, sin conexión a ningún servidor</td></tr>
+        <tr><td>Leaflet, Leaflet Routing Machine, Leaflet.markercluster, Google Fonts</td><td>Motor del mapa y tipografía</td><td>Librerías gratis, cargadas desde CDN público</td></tr>
+    </table>
+
+</div>
+{% endblock %}
