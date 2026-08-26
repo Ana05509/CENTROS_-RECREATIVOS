@@ -639,7 +639,7 @@
             <div id="barra-ruta">
                 <span class="guia-avatar">🧭</span>
                 <div class="guia-texto">
-                    <strong>Ruta hacia <span id="destino-actual"></span></strong>
+                    <strong id="guia-titulo"></strong>
                     <p id="guia-mensaje"></p>
                 </div>
                 <button id="boton-voz-guia" title="Silenciar guía">🔊</button>
@@ -688,6 +688,10 @@
         const PUNTOS = {{ puntos_json|safe }};
         const RUTAS = {{ rutas_json|safe }};
         const CENTRO = [{{ centro.lat }}, {{ centro.lng }}];
+        const TOTAL_LUGARES = {{ total_lugares }};
+        const TOTAL_PUNTOS = {{ total_puntos }};
+        const TOTAL_RUTAS = {{ total_rutas }};
+        const TOTAL_CATEGORIAS = {{ total_categorias }};
 
         const map = L.map('map', { zoomControl: true }).setView(CENTRO, 12);
 
@@ -877,7 +881,7 @@
         let llegadaAnunciada = false;
         let indicacionesVisibles = true;
         const barraRuta = document.getElementById('barra-ruta');
-        const destinoActualEl = document.getElementById('destino-actual');
+        const guiaTituloEl = document.getElementById('guia-titulo');
         const guiaMensajeEl = document.getElementById('guia-mensaje');
         const botonVozEl = document.getElementById('boton-voz-guia');
         const botonIndicacionesEl = document.getElementById('boton-indicaciones');
@@ -936,12 +940,45 @@
 
             destinoActivo = [lugar.lat, lugar.lng];
             llegadaAnunciada = false;
-            destinoActualEl.textContent = lugar.nombre;
+            guiaTituloEl.textContent = `Ruta hacia ${lugar.nombre}`;
+            botonIndicacionesEl.style.display = '';
             const mensaje = mensajeGuiaInicial(lugar);
             guiaMensajeEl.textContent = mensaje;
             hablar(mensaje, { interrumpir: true });
             barraRuta.style.display = 'flex';
         }
+
+        // ==============================
+        // 🧭 Botón fijo "Guía turístico" (sin necesidad de elegir un lugar antes)
+        // ==============================
+        function mensajeGuiaGeneral() {
+            return `¡Bienvenido al mapa recreativo de La Maná! Tenemos ${TOTAL_LUGARES} lugares recreativos ` +
+                `en ${TOTAL_CATEGORIAS} categorías, ${TOTAL_PUNTOS} recursos naturales e infraestructura, ` +
+                `y ${TOTAL_RUTAS} rutas de acceso. Toca cualquier marcador del mapa y luego "Cómo llegar" ` +
+                `para que te guíe paso a paso hasta ahí.`;
+        }
+
+        function abrirGuiaGeneral() {
+            if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; }
+            destinoActivo = null;
+            guiaTituloEl.textContent = '🧭 Guía turístico';
+            botonIndicacionesEl.style.display = 'none';
+            const mensaje = mensajeGuiaGeneral();
+            guiaMensajeEl.textContent = mensaje;
+            hablar(mensaje, { interrumpir: true });
+            barraRuta.style.display = 'flex';
+        }
+
+        const controlGuiaGeneral = L.control({ position: 'topleft' });
+        controlGuiaGeneral.onAdd = function () {
+            const div = L.DomUtil.create('div', 'leaflet-bar boton-ubicacion');
+            div.innerHTML = '🧭';
+            div.title = 'Habla con el guía turístico';
+            L.DomEvent.disableClickPropagation(div);
+            L.DomEvent.on(div, 'click', abrirGuiaGeneral);
+            return div;
+        };
+        controlGuiaGeneral.addTo(map);
 
         function iniciarRutaHacia(lugar) {
             if (miUbicacion) {
