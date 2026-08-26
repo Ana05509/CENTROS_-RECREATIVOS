@@ -352,7 +352,7 @@
             color: var(--texto-suave);
             line-height: 1.35;
         }
-        #boton-cancelar-ruta, #boton-voz-guia {
+        #boton-cancelar-ruta, #boton-voz-guia, #boton-indicaciones {
             border: none;
             background: #eee;
             color: #333;
@@ -364,8 +364,8 @@
             font-size: 0.9rem;
             line-height: 1;
         }
-        #boton-cancelar-ruta:hover, #boton-voz-guia:hover { background: #ddd; }
-        #boton-voz-guia.silenciado { opacity: 0.5; }
+        #boton-cancelar-ruta:hover, #boton-voz-guia:hover, #boton-indicaciones:hover { background: #ddd; }
+        #boton-voz-guia.silenciado, #boton-indicaciones.oculto { opacity: 0.5; }
 
         /* ===== Panel "Lugares destacados" ===== */
         #panel-destacados {
@@ -643,6 +643,7 @@
                     <p id="guia-mensaje"></p>
                 </div>
                 <button id="boton-voz-guia" title="Silenciar guía">🔊</button>
+                <button id="boton-indicaciones" title="Ocultar indicaciones escritas">📋</button>
                 <button id="boton-cancelar-ruta" title="Cancelar ruta">✕</button>
             </div>
 
@@ -690,10 +691,12 @@
 
         const map = L.map('map', { zoomControl: true }).setView(CENTRO, 12);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20,
+        // CartoDB Voyager (usado antes) ahora exige API key y estampa
+        // "API KEY REQUIRED" sobre el mapa sin ella. Se usa OpenStreetMap
+        // estándar: gratis, sin clave, sin marca de agua.
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
         }).addTo(map);
 
         const capaLugares = L.markerClusterGroup({ maxClusterRadius: 45 }).addTo(map);
@@ -872,10 +875,12 @@
         let controlRuta = null;
         let destinoActivo = null;
         let llegadaAnunciada = false;
+        let indicacionesVisibles = true;
         const barraRuta = document.getElementById('barra-ruta');
         const destinoActualEl = document.getElementById('destino-actual');
         const guiaMensajeEl = document.getElementById('guia-mensaje');
         const botonVozEl = document.getElementById('boton-voz-guia');
+        const botonIndicacionesEl = document.getElementById('boton-indicaciones');
 
         const SALUDOS_GUIA = [
             '¡Vamos! Te llevo a',
@@ -912,6 +917,10 @@
                 lineOptions: { styles: [{ color: '#4285F4', weight: 6, opacity: 0.85 }] },
                 createMarker: (i, wp) => (i === 0 ? null : L.marker(wp.latLng)),
             }).addTo(map);
+
+            // Respeta si el usuario ya había ocultado las indicaciones escritas
+            // (por ejemplo, para quedarse solo con la voz del guía).
+            controlRuta.getContainer().style.display = indicacionesVisibles ? 'block' : 'none';
 
             // Una vez OSRM calcula la ruta real, el guía suma distancia y
             // tiempo reales (no inventados) al mensaje, y lo dice en voz alta
@@ -967,6 +976,17 @@
             botonVozEl.classList.toggle('silenciado', !vozActiva);
             botonVozEl.title = vozActiva ? 'Silenciar guía' : 'Activar voz del guía';
             if (!vozActiva && 'speechSynthesis' in window) { speechSynthesis.cancel(); }
+        });
+
+        // Oculta/muestra el panel de indicaciones escritas, para quien
+        // prefiera guiarse solo con la voz del guía.
+        botonIndicacionesEl.addEventListener('click', () => {
+            indicacionesVisibles = !indicacionesVisibles;
+            botonIndicacionesEl.classList.toggle('oculto', !indicacionesVisibles);
+            botonIndicacionesEl.title = indicacionesVisibles ? 'Ocultar indicaciones escritas' : 'Mostrar indicaciones escritas';
+            if (controlRuta) {
+                controlRuta.getContainer().style.display = indicacionesVisibles ? 'block' : 'none';
+            }
         });
 
         function popupHTML(lugar) {
