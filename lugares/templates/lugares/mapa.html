@@ -317,15 +317,41 @@
             transform: translateX(-50%);
             z-index: 1000;
             background: #fff;
-            border-radius: 24px;
+            border-radius: 18px;
             box-shadow: var(--sombra-fuerte);
-            padding: 8px 10px 8px 16px;
+            padding: 10px 12px;
             align-items: center;
             gap: 12px;
             font-size: 0.85rem;
-            max-width: 90%;
+            max-width: 420px;
+            width: 90%;
         }
         #barra-ruta strong { color: var(--verde-oscuro); }
+        .guia-avatar {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--verde-claro);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .guia-texto {
+            flex: 1;
+            min-width: 0;
+        }
+        .guia-texto strong {
+            display: block;
+            font-size: 0.85rem;
+        }
+        .guia-texto p {
+            margin: 2px 0 0;
+            font-size: 0.76rem;
+            color: var(--texto-suave);
+            line-height: 1.35;
+        }
         #boton-cancelar-ruta {
             border: none;
             background: #eee;
@@ -609,7 +635,11 @@
             <button type="button" id="btn-fullscreen">⛶ Ver en pantalla completa</button>
 
             <div id="barra-ruta">
-                <span>🧭 Ruta hacia <strong id="destino-actual"></strong></span>
+                <span class="guia-avatar">🧭</span>
+                <div class="guia-texto">
+                    <strong>Ruta hacia <span id="destino-actual"></span></strong>
+                    <p id="guia-mensaje"></p>
+                </div>
                 <button id="boton-cancelar-ruta" title="Cancelar ruta">✕</button>
             </div>
 
@@ -800,16 +830,36 @@
         });
 
         // ==============================
-        // 🧭 Cómo llegar (ruta real por calles, vía OSRM)
+        // 🧭 Cómo llegar, con un "guía turístico" (ruta real por calles, vía OSRM)
         // ==============================
         let controlRuta = null;
         const barraRuta = document.getElementById('barra-ruta');
         const destinoActualEl = document.getElementById('destino-actual');
+        const guiaMensajeEl = document.getElementById('guia-mensaje');
 
-        function crearRuta(destino, nombreDestino) {
+        const SALUDOS_GUIA = [
+            '¡Vamos! Te llevo a',
+            '¡En marcha hacia',
+            'Sígueme, vamos a',
+            '¡Prepárate! Nuestro destino es',
+        ];
+
+        // Mensaje de bienvenida con datos reales del lugar (categoría, horario,
+        // costo) — la parte de "guía turístico" que pediste, sin inventar nada
+        // que no esté ya cargado en el lugar.
+        function mensajeGuiaInicial(lugar) {
+            const saludo = SALUDOS_GUIA[Math.floor(Math.random() * SALUDOS_GUIA.length)];
+            const costo = parseFloat(lugar.costo_entrada) > 0
+                ? `entrada $${parseFloat(lugar.costo_entrada).toFixed(2)}`
+                : 'entrada gratuita';
+            const horario = lugar.horario ? `, horario ${lugar.horario}` : '';
+            return `${saludo} ${lugar.nombre}. Categoría: ${lugar.categoria} · ${costo}${horario}.`;
+        }
+
+        function crearRuta(lugar) {
             if (controlRuta) { map.removeControl(controlRuta); }
             controlRuta = L.Routing.control({
-                waypoints: [L.latLng(miUbicacion[0], miUbicacion[1]), L.latLng(destino[0], destino[1])],
+                waypoints: [L.latLng(miUbicacion[0], miUbicacion[1]), L.latLng(lugar.lat, lugar.lng)],
                 router: L.Routing.osrmv1({
                     serviceUrl: 'https://router.project-osrm.org/route/v1',
                     language: 'es',
@@ -823,13 +873,23 @@
                 createMarker: (i, wp) => (i === 0 ? null : L.marker(wp.latLng)),
             }).addTo(map);
 
-            destinoActualEl.textContent = nombreDestino;
+            // Una vez OSRM calcula la ruta real, el guía suma distancia y
+            // tiempo reales (no inventados) al mensaje.
+            controlRuta.on('routesfound', (e) => {
+                const resumen = e.routes[0].summary;
+                const km = (resumen.totalDistance / 1000).toFixed(1);
+                const min = Math.round(resumen.totalTime / 60);
+                guiaMensajeEl.textContent += ` 📏 ${km} km · ⏱️ unos ${min} min.`;
+            });
+
+            destinoActualEl.textContent = lugar.nombre;
+            guiaMensajeEl.textContent = mensajeGuiaInicial(lugar);
             barraRuta.style.display = 'flex';
         }
 
-        function iniciarRutaHacia(destino, nombreDestino) {
+        function iniciarRutaHacia(lugar) {
             if (miUbicacion) {
-                crearRuta(destino, nombreDestino);
+                crearRuta(lugar);
                 return;
             }
             if (!navigator.geolocation) {
@@ -839,7 +899,7 @@
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     actualizarUbicacion(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, pos.coords.heading);
-                    crearRuta(destino, nombreDestino);
+                    crearRuta(lugar);
                     if (watchId === null) { activarMiUbicacion(false); }
                 },
                 () => alert('Activa el permiso de ubicación para calcular la ruta.'),
@@ -867,7 +927,7 @@
                     ${lugar.horario ? `<p><span class="etiqueta">Horario:</span> ${lugar.horario}</p>` : ''}
                     <p><span class="etiqueta">Entrada:</span> ${costo}</p>
                     <p><a class="link-galeria" href="${lugar.detalle_url}">📷 ${lugar.multimedia_count > 0 ? `Ver ${lugar.multimedia_count} foto(s)/video(s)` : 'Agregar fotos y videos'}</a></p>
-                    <button class="btn-como-llegar" data-lat="${lugar.lat}" data-lng="${lugar.lng}" data-nombre="${lugar.nombre.replace(/"/g, '&quot;')}">🧭 Cómo llegar</button>
+                    <button class="btn-como-llegar" data-id="${lugar.id}">🧭 Cómo llegar</button>
                 </div>
             `;
         }
@@ -1094,8 +1154,9 @@
         document.addEventListener('click', (e) => {
             const boton = e.target.closest('.btn-como-llegar');
             if (!boton) return;
-            const destino = [parseFloat(boton.dataset.lat), parseFloat(boton.dataset.lng)];
-            iniciarRutaHacia(destino, boton.dataset.nombre);
+            const lugar = LUGARES.find((l) => l.id === parseInt(boton.dataset.id, 10));
+            if (!lugar) return;
+            iniciarRutaHacia(lugar);
         });
 
         // ==============================
