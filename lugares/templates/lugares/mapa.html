@@ -352,18 +352,20 @@
             color: var(--texto-suave);
             line-height: 1.35;
         }
-        #boton-cancelar-ruta {
+        #boton-cancelar-ruta, #boton-voz-guia {
             border: none;
             background: #eee;
             color: #333;
             border-radius: 50%;
             width: 28px;
             height: 28px;
+            flex-shrink: 0;
             cursor: pointer;
             font-size: 0.9rem;
             line-height: 1;
         }
-        #boton-cancelar-ruta:hover { background: #ddd; }
+        #boton-cancelar-ruta:hover, #boton-voz-guia:hover { background: #ddd; }
+        #boton-voz-guia.silenciado { opacity: 0.5; }
 
         /* ===== Panel "Lugares destacados" ===== */
         #panel-destacados {
@@ -640,6 +642,7 @@
                     <strong>Ruta hacia <span id="destino-actual"></span></strong>
                     <p id="guia-mensaje"></p>
                 </div>
+                <button id="boton-voz-guia" title="Silenciar guía">🔊</button>
                 <button id="boton-cancelar-ruta" title="Cancelar ruta">✕</button>
             </div>
 
@@ -790,6 +793,15 @@
             if (siguiendoUbicacion) {
                 map.setView(miUbicacion, map.getZoom(), { animate: true });
             }
+            // Si hay una ruta activa y ya estamos a menos de 40 m del destino,
+            // el guía anuncia la llegada en voz alta (una sola vez por ruta).
+            if (destinoActivo && !llegadaAnunciada) {
+                const distancia = map.distance(miUbicacion, destinoActivo);
+                if (distancia < 40) {
+                    llegadaAnunciada = true;
+                    hablar('🏁 ¡Llegaste a tu destino! Que disfrutes tu visita.', { interrumpir: true });
+                }
+            }
         }
 
         function activarMiUbicacion(centrar) {
@@ -830,12 +842,40 @@
         });
 
         // ==============================
+        // 🔊 Voz del guía (Web Speech API del navegador, sin claves ni costo)
+        // ==============================
+        let vozActiva = true;
+        let vozEspanolElegida = null;
+
+        function elegirVozEspanol() {
+            if (!('speechSynthesis' in window)) return;
+            const voces = speechSynthesis.getVoices();
+            vozEspanolElegida = voces.find((v) => v.lang && v.lang.toLowerCase().startsWith('es')) || null;
+        }
+        if ('speechSynthesis' in window) {
+            elegirVozEspanol();
+            speechSynthesis.onvoiceschanged = elegirVozEspanol;
+        }
+
+        function hablar(texto, { interrumpir = false } = {}) {
+            if (!vozActiva || !('speechSynthesis' in window)) return;
+            if (interrumpir) { speechSynthesis.cancel(); }
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-ES';
+            if (vozEspanolElegida) { utterance.voice = vozEspanolElegida; }
+            speechSynthesis.speak(utterance);
+        }
+
+        // ==============================
         // 🧭 Cómo llegar, con un "guía turístico" (ruta real por calles, vía OSRM)
         // ==============================
         let controlRuta = null;
+        let destinoActivo = null;
+        let llegadaAnunciada = false;
         const barraRuta = document.getElementById('barra-ruta');
         const destinoActualEl = document.getElementById('destino-actual');
         const guiaMensajeEl = document.getElementById('guia-mensaje');
+        const botonVozEl = document.getElementById('boton-voz-guia');
 
         const SALUDOS_GUIA = [
             '¡Vamos! Te llevo a',
@@ -874,16 +914,23 @@
             }).addTo(map);
 
             // Una vez OSRM calcula la ruta real, el guía suma distancia y
-            // tiempo reales (no inventados) al mensaje.
+            // tiempo reales (no inventados) al mensaje, y lo dice en voz alta
+            // (se encola después del saludo, sin cortarlo).
             controlRuta.on('routesfound', (e) => {
                 const resumen = e.routes[0].summary;
                 const km = (resumen.totalDistance / 1000).toFixed(1);
                 const min = Math.round(resumen.totalTime / 60);
-                guiaMensajeEl.textContent += ` 📏 ${km} km · ⏱️ unos ${min} min.`;
+                const extra = ` 📏 ${km} km · ⏱️ unos ${min} min.`;
+                guiaMensajeEl.textContent += extra;
+                hablar(`Son ${km} kilómetros, unos ${min} minutos.`);
             });
 
+            destinoActivo = [lugar.lat, lugar.lng];
+            llegadaAnunciada = false;
             destinoActualEl.textContent = lugar.nombre;
-            guiaMensajeEl.textContent = mensajeGuiaInicial(lugar);
+            const mensaje = mensajeGuiaInicial(lugar);
+            guiaMensajeEl.textContent = mensaje;
+            hablar(mensaje, { interrumpir: true });
             barraRuta.style.display = 'flex';
         }
 
@@ -909,7 +956,17 @@
 
         document.getElementById('boton-cancelar-ruta').addEventListener('click', () => {
             if (controlRuta) { map.removeControl(controlRuta); controlRuta = null; }
+            if ('speechSynthesis' in window) { speechSynthesis.cancel(); }
+            destinoActivo = null;
             barraRuta.style.display = 'none';
+        });
+
+        botonVozEl.addEventListener('click', () => {
+            vozActiva = !vozActiva;
+            botonVozEl.textContent = vozActiva ? '🔊' : '🔇';
+            botonVozEl.classList.toggle('silenciado', !vozActiva);
+            botonVozEl.title = vozActiva ? 'Silenciar guía' : 'Activar voz del guía';
+            if (!vozActiva && 'speechSynthesis' in window) { speechSynthesis.cancel(); }
         });
 
         function popupHTML(lugar) {
